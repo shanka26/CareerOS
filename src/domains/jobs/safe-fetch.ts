@@ -12,7 +12,10 @@ function isPrivate(address: string) {
 export async function assertPublicJobUrl(value: string) {
   const url = new URL(value);
   if (url.protocol !== "https:" || url.username || url.password || url.port) throw new Error("Job URLs must use public HTTPS without credentials or custom ports.");
-  const addresses = isIP(url.hostname) ? [{ address: url.hostname }] : await lookup(url.hostname, { all: true });
+  // Node exposes IPv6 URL hostnames with brackets on some platforms. DNS lookup
+  // treats that form as a hostname, so normalize it before classifying the IP.
+  const hostname = url.hostname.replace(/^\[|\]$/g, "");
+  const addresses = isIP(hostname) ? [{ address: hostname }] : await lookup(hostname, { all: true });
   if (!addresses.length || addresses.some(({ address }) => isPrivate(address))) throw new Error("Private or local job URLs are not allowed.");
   return url;
 }
