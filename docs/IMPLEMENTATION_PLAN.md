@@ -165,6 +165,7 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-07-29: Milestone 10 completed. Added owner-scoped application creation from jobs and exact immutable resume/cover-letter versions, the complete documented Kanban pipeline, guarded state transitions, applied-date handling, timeline events, version links, and transition/integrity tests.
 - 2026-07-29: Milestone 9 completed. Added role/company-specific cover-letter composition from verified snapshots, factual-source explanations, generated document/version persistence, editing and PDF export reuse, UI trigger, and grounding tests.
 - 2026-07-29: Milestone 8 completed. Added a verified-fact resume strategy, relevance ordering, fact-ID change explanations, immutable knowledge snapshots, generated document/version persistence, editing and PDF export reuse, UI trigger, and grounding tests. The deterministic adapter is labeled and makes no live-AI claim.
 - 2026-07-29: Milestone 7 completed. Added pasted-text and hardened public-HTTPS job import with DNS/private-address checks, bounded redirects/time/size/content, conservative parsing, verified-skill match scoring and explanations, owner-scoped persistence, workspace UI, and tests. Live third-party URL compatibility is not claimed.
