@@ -165,4 +165,5 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-07-29: Milestone 1 completed. Added the Next.js App Router foundation, strict TypeScript, Tailwind and shadcn-style primitives, TanStack Query provider, domain registry, validated public configuration, environment template, lint/type/test/build tooling, CI, responsive trust-focused landing page, and development documentation. ESLint, typecheck, 3 tests, and production build pass. Latest stable Next.js bundled-dependency advisories are documented as a release risk pending an upstream stable patch.
 - 2026-07-29: Milestone 0 completed. Repository cloned and updated from `main`; all Markdown read; documentation-only state confirmed; conflicts, assumptions, plan, test strategy, and risks recorded; implementation branch created.

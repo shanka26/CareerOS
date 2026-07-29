@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+
+# Next.js
+/.next
+/out
+
+# tests and reports
+/coverage
+/playwright-report
+/test-results
+
+# local runtime data
+/.data
+/uploads
+
+# environment (examples are committed)
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# logs and editor files
+*.log
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
