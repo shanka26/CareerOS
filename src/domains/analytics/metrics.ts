@@ -16,3 +16,14 @@ export function calculateCareerMetrics(applications: AnalyticsApplication[]) {
   const percentage = (value: number, total: number) => total === 0 ? 0 : Math.round((value / total) * 100);
   return { tracked: applications.length, submitted, responses, interviews, offers, responseRate: percentage(responses, submitted), interviewRate: percentage(interviews, submitted), offerRate: percentage(offers, submitted) };
 }
+
+export function calculateSuggestionMetrics(statuses: Array<"PENDING" | "ACCEPTED" | "REJECTED">) {
+  const accepted = statuses.filter((status) => status === "ACCEPTED").length;
+  const reviewed = statuses.filter((status) => status !== "PENDING").length;
+  return {
+    pending: statuses.length - reviewed,
+    reviewed,
+    accepted,
+    acceptanceRate: reviewed === 0 ? 0 : Math.round((accepted / reviewed) * 100),
+  };
+}

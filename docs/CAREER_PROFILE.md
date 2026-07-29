@@ -10,7 +10,7 @@ PDF extraction uses `pdf-parse` v2 and DOCX extraction uses Mammoth raw text. Th
 
 ## Storage and security
 
-The local adapter writes randomized names under `.data/uploads/<user-id>` and is disabled when `NODE_ENV=production`. A production object-storage adapter and lifecycle controls are completed with the Document Library milestone. Failed persistence removes an orphaned local file.
+The local adapter writes randomized names under `.data/uploads/<user-id>` and is disabled when `NODE_ENV=production`. Production object storage and lifecycle controls are not implemented; uploads intentionally fail closed in production until that adapter and malware scanning are added. Failed local persistence removes an orphaned file.
 
 Upload routes validate a full Better Auth session and derive ownership from it. User IDs and storage paths are never accepted from request input. Size and type checks occur before parsing, extracted text is bounded, and raw source content is untrusted text. Malware scanning remains required at the production storage boundary.
 

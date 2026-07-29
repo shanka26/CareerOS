@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     const text = parsed.data.url ? await fetchPublicJobText(parsed.data.url) : parsed.data.text!.trim();
     const profile = await prisma.careerProfile.findUnique({ where: { userId: session.user.id }, include: { careerSkills: { where: { verified: true }, include: { skill: true } } } });
     const analysis = analyzeJobText(text, profile?.careerSkills.map(({ skill }) => skill.name) ?? []);
-    const job = await prisma.jobPosting.create({ data: { ownerId: session.user.id, source: parsed.data.url ? "URL" : "PASTE", url: parsed.data.url ?? null, companyName: analysis.company, title: analysis.title, description: text, parsedRequirements: analysis.requirements, analysis, matchScore: analysis.score, status: "ANALYZED" } });
+    const company = await prisma.company.upsert({ where: { ownerId_name: { ownerId: session.user.id, name: analysis.company } }, update: {}, create: { ownerId: session.user.id, name: analysis.company, website: parsed.data.url ? new URL(parsed.data.url).origin : null } });
+    const job = await prisma.jobPosting.create({ data: { ownerId: session.user.id, companyId: company.id, source: parsed.data.url ? "URL" : "PASTE", url: parsed.data.url ?? null, companyName: analysis.company, title: analysis.title, location: analysis.location, employmentType: analysis.employmentType, ...(analysis.salary ? { salary: analysis.salary } : {}), description: text, parsedRequirements: analysis.requirements, analysis, matchScore: analysis.score, status: "ANALYZED" } });
     return NextResponse.json({ id: job.id }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Job import failed." }, { status: 400 }); }
 }

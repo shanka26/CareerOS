@@ -11,6 +11,12 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Company, title, and description are required.", issues: parsed.error.flatten() }, { status: 400 });
 
   const profile = await prisma.careerProfile.upsert({ where: { userId: session.user.id }, update: {}, create: { userId: session.user.id } });
-  const experience = await prisma.experience.create({ data: { careerProfileId: profile.id, company: parsed.data.company, title: parsed.data.title, description: parsed.data.description, current: parsed.data.current, startDate: parsed.data.startDate ?? null, endDate: parsed.data.endDate ?? null, verified: true } });
+  const values = { company: parsed.data.company, title: parsed.data.title, description: parsed.data.description, current: parsed.data.current, startDate: parsed.data.startDate ?? null, endDate: parsed.data.endDate ?? null, verified: true };
+  if (parsed.data.id) {
+    const updated = await prisma.experience.updateMany({ where: { id: parsed.data.id, careerProfileId: profile.id }, data: values });
+    if (!updated.count) return NextResponse.json({ error: "Experience not found." }, { status: 404 });
+    return NextResponse.json({ id: parsed.data.id });
+  }
+  const experience = await prisma.experience.create({ data: { careerProfileId: profile.id, ...values } });
   return NextResponse.json({ id: experience.id }, { status: 201 });
 }

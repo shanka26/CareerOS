@@ -1,6 +1,6 @@
 # CareerOS Implementation Plan
 
-**Status:** Source implementation complete; production release validation blocked
+**Status:** MVP foundation implemented; audit gaps and production release gates remain
 **Branch:** `build/careeros-mvp`  
 **Last updated:** 2026-07-29
 
@@ -165,6 +165,7 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-07-29: Requirements housekeeping audit reread all project documentation and corrected overstatements. Added complete manual Career Knowledge editing, application history inspection, structured job-field/requirements review, company linkage, expanded verified-fact resume evidence, generation logs, provenance-preserving document edits, suggestion acceptance analytics, and targeted component/security/domain tests. `docs/REQUIREMENTS_AUDIT.md` records remaining AI wiring, production storage, live database/E2E, DNS-pinning, PDF fidelity, and dependency-security gates.
 - 2026-07-29: Milestone 12 implementation completed. Added unified Career Twin guidance and approval routing, settings/privacy and integration-status surfaces, responsive navigation, loading/error/not-found states, baseline security headers, crawler exclusions, release/security documentation, and final schema/audit checks. Production acceptance remains blocked by unavailable live PostgreSQL/OAuth/storage/OpenAI verification and four production npm advisories (three high) in the latest stable Next.js bundled PostCSS/Sharp dependencies; the audit's proposed forced downgrade is unsafe.
 - 2026-07-29: Milestone 11 completed. Added owner-scoped career analytics for tracked/submitted applications, responses, interviews, offers, conversion rates, Career Twin completeness, and pending fact reviews, with documented measurement rules and zero-denominator tests.
 - 2026-07-29: Milestone 10 completed. Added owner-scoped application creation from jobs and exact immutable resume/cover-letter versions, the complete documented Kanban pipeline, guarded state transitions, applied-date handling, timeline events, version links, and transition/integrity tests.

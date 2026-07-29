@@ -10,6 +10,7 @@ export const approveResumeDraftSchema = z.object({
   preferredLocations: z.array(z.string().trim().min(1).max(100)).max(20).default([]),
   remotePreference: z.enum(["ONSITE", "HYBRID", "REMOTE", "FLEXIBLE"]).nullable().default(null),
   careerGoals: z.array(z.string().trim().min(1).max(300)).max(20).default([]),
+  salaryExpectation: z.string().trim().max(300).optional(),
   skills: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
 });
 

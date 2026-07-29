@@ -13,6 +13,7 @@ interface ProfileValues {
   preferredLocations: string[];
   remotePreference: string | null;
   careerGoals: string[];
+  salaryExpectation: string;
 }
 
 export function ProfileEditor({ profile }: { profile: ProfileValues }) {
@@ -36,6 +37,7 @@ export function ProfileEditor({ profile }: { profile: ProfileValues }) {
       <Input label="Preferred locations" name="preferredLocations" defaultValue={profile.preferredLocations.join(", ")} />
       <label className="grid gap-2 text-sm font-semibold">Work preference<select name="remotePreference" defaultValue={profile.remotePreference ?? ""} className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 font-normal"><option value="">Not set</option><option value="REMOTE">Remote</option><option value="HYBRID">Hybrid</option><option value="ONSITE">On-site</option><option value="FLEXIBLE">Flexible</option></select></label>
       <label className="grid gap-2 text-sm font-semibold">Career goals<textarea name="careerGoals" defaultValue={profile.careerGoals.join("\n")} rows={3} className="rounded-xl border border-[var(--line)] bg-white p-4 font-normal" /></label>
+      <Input label="Salary expectations" name="salaryExpectation" defaultValue={profile.salaryExpectation} />
       {message ? <p role="status" className="text-sm font-semibold text-[var(--muted)]">{message}</p> : null}
       <Button type="submit" disabled={pending}>{pending ? <LoaderCircle className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}Save profile</Button>
     </form>

@@ -19,6 +19,8 @@ export default async function JobPage({
     matchedSkills?: string[];
     explanation?: string;
   } | null;
+  const requirements = Array.isArray(job.parsedRequirements) ? job.parsedRequirements.filter((item): item is string => typeof item === "string") : [];
+  const salary = job.salary as { sourceText?: string } | null;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -30,6 +32,7 @@ export default async function JobPage({
         <GenerateButtons jobId={job.id} />
         <GenerateButtons jobId={job.id} cover />
       </div>
+      <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">{job.location ? <span className="rounded-full bg-white px-3 py-1">{job.location}</span> : null}{job.employmentType ? <span className="rounded-full bg-white px-3 py-1">{job.employmentType}</span> : null}{salary?.sourceText ? <span className="rounded-full bg-white px-3 py-1">{salary.sourceText}</span> : null}</div>
       <div className="mt-8 grid gap-5 md:grid-cols-[18rem_1fr]">
         <Card className="p-6">
           <p className="text-xs font-bold uppercase text-[var(--muted)]">
@@ -51,7 +54,9 @@ export default async function JobPage({
           </div>
         </Card>
         <Card className="p-6">
-          <h2 className="font-bold">Imported description</h2>
+          <h2 className="font-bold">Parsed requirements</h2>
+          {requirements.length ? <ul className="mt-4 list-disc space-y-2 pl-5 text-sm">{requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}</ul> : <p className="mt-4 text-sm text-[var(--muted)]">No explicit requirement lines were detected. Review the source text below.</p>}
+          <h2 className="mt-7 font-bold">Imported description</h2>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-6">
             {job.description}
           </p>

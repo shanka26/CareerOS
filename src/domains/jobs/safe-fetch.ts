@@ -27,7 +27,23 @@ export async function fetchPublicJobText(value: string) {
     }
     if (!response.ok) throw new Error(`Job page returned HTTP ${response.status}.`);
     if (!(response.headers.get("content-type") ?? "").includes("text/html")) throw new Error("Job URL must return HTML.");
-    const html = await response.text(); if (html.length > 1_000_000) throw new Error("Job page is too large to import safely.");
+    const declaredSize = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declaredSize) && declaredSize > 1_000_000) throw new Error("Job page is too large to import safely.");
+    if (!response.body) throw new Error("Job page returned an empty body.");
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let received = 0;
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) break;
+      received += chunk.byteLength;
+      if (received > 1_000_000) { await reader.cancel(); throw new Error("Job page is too large to import safely."); }
+      chunks.push(chunk);
+    }
+    const bytes = new Uint8Array(received);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    const html = new TextDecoder().decode(bytes);
     return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
   }
   throw new Error("Job URL redirected too many times.");

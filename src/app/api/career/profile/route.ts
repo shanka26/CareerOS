@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { updateCareerProfileSchema } from "@/domains/career/resume/schemas";
 import { getSession } from "@/domains/settings/auth/session";
@@ -17,6 +18,7 @@ export async function PUT(request: Request) {
     preferredLocations: parsed.data.preferredLocations,
     remotePreference: parsed.data.remotePreference,
     careerGoals: parsed.data.careerGoals,
+    salaryExpectation: parsed.data.salaryExpectation ? { notes: parsed.data.salaryExpectation } : Prisma.JsonNull,
   };
   await prisma.careerProfile.upsert({ where: { userId: session.user.id }, update: data, create: { userId: session.user.id, ...data } });
   return NextResponse.json({ ok: true });

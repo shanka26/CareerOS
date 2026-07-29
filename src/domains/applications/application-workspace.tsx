@@ -100,6 +100,7 @@ export function ApplicationWorkspace({
                   <Card className="p-4" key={application.id}>
                     <p className="text-xs font-bold text-[var(--accent)]">{application.company}</p>
                     <h3 className="mt-1 font-bold">{application.title}</h3>
+                    <Link className="mt-2 inline-block text-xs font-bold underline" href={`/dashboard/applications/${application.id}`}>View history</Link>
                     <div className="mt-3 space-y-1 text-xs">
                       {application.resume ? <Link className="underline" href={`/dashboard/documents/${application.resume.documentId}`}>Resume v{application.resume.version}</Link> : null}
                       {application.coverLetter ? <><br /><Link className="underline" href={`/dashboard/documents/${application.coverLetter.documentId}`}>Cover letter v{application.coverLetter.version}</Link></> : null}

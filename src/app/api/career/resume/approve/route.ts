@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { approveResumeDraftSchema } from "@/domains/career/resume/schemas";
 import { getSession } from "@/domains/settings/auth/session";
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
           preferredLocations: parsed.data.preferredLocations,
           remotePreference: parsed.data.remotePreference,
           careerGoals: parsed.data.careerGoals,
+          salaryExpectation: parsed.data.salaryExpectation ? { notes: parsed.data.salaryExpectation } : Prisma.JsonNull,
         },
         create: {
           userId: session.user.id,
@@ -34,6 +36,7 @@ export async function POST(request: Request) {
           preferredLocations: parsed.data.preferredLocations,
           remotePreference: parsed.data.remotePreference,
           careerGoals: parsed.data.careerGoals,
+          salaryExpectation: parsed.data.salaryExpectation ? { notes: parsed.data.salaryExpectation } : Prisma.JsonNull,
         },
       });
 

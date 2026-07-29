@@ -32,6 +32,7 @@ export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string
             preferredLocations: String(data.get("preferredLocations") ?? "").split(",").map((value) => value.trim()).filter(Boolean),
             remotePreference: data.get("remotePreference") || null,
             careerGoals: String(data.get("careerGoals") ?? "").split("\n").map((value) => value.trim()).filter(Boolean),
+            salaryExpectation: data.get("salaryExpectation"),
             skills: String(data.get("skills") ?? "").split(",").map((value) => value.trim()).filter(Boolean),
           }),
         });
@@ -52,6 +53,7 @@ export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string
       <TextField label="Preferred locations (comma-separated)" name="preferredLocations" />
       <label className="grid gap-2 text-sm font-semibold">Work preference<select name="remotePreference" className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 font-normal"><option value="">Not set</option><option value="REMOTE">Remote</option><option value="HYBRID">Hybrid</option><option value="ONSITE">On-site</option><option value="FLEXIBLE">Flexible</option></select></label>
       <TextArea label="Career goals (one per line)" name="careerGoals" rows={3} />
+      <TextField label="Salary expectations (optional)" name="salaryExpectation" />
       <details className="rounded-2xl border border-[var(--line)] bg-white/50 p-4"><summary className="cursor-pointer font-bold">Compare against extracted text</summary><pre className="mt-4 max-h-72 overflow-auto whitespace-pre-wrap text-xs leading-5 text-[var(--muted)]">{draft.rawText}</pre></details>
       <div className="rounded-2xl bg-[var(--ink)] p-5 text-[var(--paper)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-white/50">Questions to strengthen your profile</p><ul className="mt-3 grid gap-2 text-sm">{draft.questions.map((question) => <li key={question}>• {question}</li>)}</ul></div>
       {error ? <p role="alert" className="text-sm font-semibold text-red-700">{error}</p> : null}

@@ -3,6 +3,7 @@ import { z } from "zod";
 const optionalDate = z.preprocess((value) => value === "" || value == null ? undefined : value, z.coerce.date().optional());
 
 export const createExperienceSchema = z.object({
+  id: z.string().min(1).optional(),
   company: z.string().trim().min(1).max(120),
   title: z.string().trim().min(1).max(120),
   startDate: optionalDate,
