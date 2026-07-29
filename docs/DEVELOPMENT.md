@@ -18,11 +18,14 @@ Never commit `.env`, `.env.local`, credentials, uploaded resumes, or generated p
 
 - `npm run lint` — ESLint with Next.js and TypeScript rules
 - `npm run typecheck` — strict TypeScript without emitting files
+- `npm run db:validate` — validate the Prisma model without changing a database
 - `npm test` — Vitest unit/component suite
 - `npm run build` — optimized production build
 - `npm run check` — all required milestone checks in order
 
 Tests that require real PostgreSQL must use `TEST_DATABASE_URL`; tests that call paid/external services must use explicit adapters and must not silently make network calls.
+
+See [DATABASE.md](./DATABASE.md) for local pgvector startup, migrations, seeding, schema decisions, and live-test limitations.
 
 ## Dependency security
 

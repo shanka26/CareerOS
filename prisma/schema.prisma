@@ -8,16 +8,77 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum RemotePreference {
+  ONSITE
+  HYBRID
+  REMOTE
+  FLEXIBLE
+}
+
+enum DocumentType {
+  BASE_RESUME
+  GENERATED_RESUME
+  BASE_COVER_LETTER
+  GENERATED_COVER_LETTER
+}
+
+enum DocumentStatus {
+  DRAFT
+  FINAL
+  ARCHIVED
+}
+
+enum JobSource {
+  URL
+  PASTE
+  MANUAL
+}
+
+enum JobWorkspaceStatus {
+  IMPORTED
+  ANALYZED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  SAVED
+  TAILORING
+  READY
+  APPLIED
+  RECRUITER_SCREEN
+  TECHNICAL_INTERVIEW
+  FINAL_INTERVIEW
+  OFFER
+  REJECTED
+  ARCHIVED
+}
+
+enum MemorySuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  emailVerified       Boolean              @default(false)
+  image               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  careerProfile       CareerProfile?
+  documents           Document[]
+  jobs                JobPosting[]
+  companies           Company[]
+  applications        Application[]
+  memorySuggestions   MemorySuggestion[]
+  knowledgeSnapshots  KnowledgeSnapshot[]
+  generationLogs      GenerationLog[]
+  careerMetric        CareerMetric?
+  knowledgeEmbeddings KnowledgeEmbedding[]
 
   @@map("user")
 }
@@ -68,4 +129,349 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model CareerProfile {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  headline           String?
+  summary            String?
+  targetRole         String?
+  preferredLocations String[]          @default([])
+  remotePreference   RemotePreference?
+  salaryExpectation  Json?
+  careerGoals        String[]          @default([])
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiences        Experience[]
+  projects           Project[]
+  careerSkills       CareerSkill[]
+  education          Education[]
+  certifications     Certification[]
+
+  @@map("career_profile")
+}
+
+model Experience {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  company         String
+  title           String
+  startDate       DateTime?
+  endDate         DateTime?
+  current         Boolean       @default(false)
+  description     String
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  achievements    Achievement[]
+
+  @@index([careerProfileId])
+  @@map("experience")
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  name            String
+  description     String
+  impact          String?
+  technologies    String[]      @default([])
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([careerProfileId])
+  @@map("project")
+}
+
+model Skill {
+  id           String        @id @default(cuid())
+  name         String
+  category     String
+  createdAt    DateTime      @default(now())
+  careerSkills CareerSkill[]
+
+  @@unique([name, category])
+  @@map("skill")
+}
+
+model CareerSkill {
+  careerProfileId String
+  skillId         String
+  proficiency     String?
+  confidence      Float?
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  skill           Skill         @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([careerProfileId, skillId])
+  @@index([skillId])
+  @@map("career_skill")
+}
+
+model Achievement {
+  id           String     @id @default(cuid())
+  experienceId String
+  metric       String?
+  description  String
+  quantified   Boolean    @default(false)
+  verified     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId])
+  @@map("achievement")
+}
+
+model Education {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  school          String
+  degree          String?
+  field           String?
+  graduationDate  DateTime?
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([careerProfileId])
+  @@map("education")
+}
+
+model Certification {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  name            String
+  issuer          String
+  issueDate       DateTime?
+  expirationDate  DateTime?
+  verified        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([careerProfileId])
+  @@map("certification")
+}
+
+model Document {
+  id        String            @id @default(cuid())
+  ownerId   String
+  type      DocumentType
+  status    DocumentStatus    @default(DRAFT)
+  title     String
+  markdown  String?
+  html      String?
+  pdfPath   String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  versions  DocumentVersion[]
+
+  @@index([ownerId, type, createdAt])
+  @@map("document")
+}
+
+model DocumentVersion {
+  id                      String             @id @default(cuid())
+  documentId              String
+  version                 Int
+  aiProvider              String?
+  aiModel                 String?
+  promptVersion           String?
+  knowledgeSnapshotId     String?
+  markdown                String
+  html                    String?
+  pdfPath                 String?
+  changeExplanation       Json?
+  createdAt               DateTime           @default(now())
+  document                Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  knowledgeSnapshot       KnowledgeSnapshot? @relation(fields: [knowledgeSnapshotId], references: [id], onDelete: Restrict)
+  resumeApplications      Application[]      @relation("ApplicationResumeVersion")
+  coverLetterApplications Application[]      @relation("ApplicationCoverVersion")
+  generationLogs          GenerationLog[]
+
+  @@unique([documentId, version])
+  @@unique([documentId, id])
+  @@index([knowledgeSnapshotId])
+  @@map("document_version")
+}
+
+model Company {
+  id        String       @id @default(cuid())
+  ownerId   String
+  name      String
+  industry  String?
+  website   String?
+  mission   String?
+  values    String[]     @default([])
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  jobs      JobPosting[]
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+  @@map("company")
+}
+
+model JobPosting {
+  id                 String             @id @default(cuid())
+  ownerId            String
+  companyId          String?
+  source             JobSource
+  url                String?
+  companyName        String
+  title              String
+  location           String?
+  employmentType     String?
+  description        String
+  parsedRequirements Json?
+  analysis           Json?
+  matchScore         Int?
+  salary             Json?
+  status             JobWorkspaceStatus @default(IMPORTED)
+  importedAt         DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  owner              User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  company            Company?           @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  applications       Application[]
+
+  @@index([ownerId, importedAt])
+  @@index([companyId])
+  @@map("job_posting")
+}
+
+model Application {
+  id                    String            @id @default(cuid())
+  userId                String
+  jobId                 String
+  resumeDocumentId      String?
+  coverLetterDocumentId String?
+  resumeVersionId       String?
+  coverLetterVersionId  String?
+  status                ApplicationStatus @default(SAVED)
+  appliedDate           DateTime?
+  createdAt             DateTime          @default(now())
+  lastUpdated           DateTime          @updatedAt
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job                   JobPosting        @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  resumeVersion         DocumentVersion?  @relation("ApplicationResumeVersion", fields: [resumeDocumentId, resumeVersionId], references: [documentId, id], onDelete: Restrict)
+  coverLetterVersion    DocumentVersion?  @relation("ApplicationCoverVersion", fields: [coverLetterDocumentId, coverLetterVersionId], references: [documentId, id], onDelete: Restrict)
+  timelineEvents        TimelineEvent[]
+
+  @@index([userId, status])
+  @@index([jobId])
+  @@index([resumeDocumentId])
+  @@index([coverLetterDocumentId])
+  @@index([resumeVersionId])
+  @@index([coverLetterVersionId])
+  @@map("application")
+}
+
+model TimelineEvent {
+  id            String      @id @default(cuid())
+  applicationId String
+  type          String
+  title         String
+  notes         String?
+  occurredAt    DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, occurredAt])
+  @@map("timeline_event")
+}
+
+model MemorySuggestion {
+  id           String                 @id @default(cuid())
+  userId       String
+  source       String
+  confidence   Float?
+  proposedFact Json
+  status       MemorySuggestionStatus @default(PENDING)
+  reviewedAt   DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+  @@map("memory_suggestion")
+}
+
+model KnowledgeSnapshot {
+  id               String               @id @default(cuid())
+  userId           String
+  checksum         String
+  facts            Json
+  createdAt        DateTime             @default(now())
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentVersions DocumentVersion[]
+  generationLogs   GenerationLog[]
+  embeddings       KnowledgeEmbedding[]
+
+  @@unique([userId, checksum])
+  @@index([userId, createdAt])
+  @@map("knowledge_snapshot")
+}
+
+model GenerationLog {
+  id               String             @id @default(cuid())
+  userId           String
+  provider         String
+  model            String
+  action           String
+  promptVersion    String
+  inputSnapshotId  String?
+  outputDocumentId String?
+  durationMs       Int
+  success          Boolean
+  errorCode        String?
+  createdAt        DateTime           @default(now())
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputSnapshot    KnowledgeSnapshot? @relation(fields: [inputSnapshotId], references: [id], onDelete: Restrict)
+  outputDocument   DocumentVersion?   @relation(fields: [outputDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, action, createdAt])
+  @@index([inputSnapshotId])
+  @@index([outputDocumentId])
+  @@map("generation_log")
+}
+
+model KnowledgeEmbedding {
+  id         String                      @id @default(cuid())
+  userId     String
+  snapshotId String
+  content    String
+  embedding  Unsupported("vector(1536)")
+  createdAt  DateTime                    @default(now())
+  user       User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshot   KnowledgeSnapshot           @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([snapshotId])
+  @@map("knowledge_embedding")
+}
+
+model CareerMetric {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  applications  Int      @default(0)
+  interviews    Int      @default(0)
+  offers        Int      @default(0)
+  responseRate  Float    @default(0)
+  interviewRate Float    @default(0)
+  offerRate     Float    @default(0)
+  calculatedAt  DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("career_metric")
 }

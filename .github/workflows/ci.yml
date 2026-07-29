@@ -21,6 +21,10 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run db:validate
+        env:
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/careeros_build
+          DIRECT_URL: postgresql://build:build@127.0.0.1:5432/careeros_build
       - run: npm test
       - run: npm run build
         env:
