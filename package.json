@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -13,11 +13,16 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
+    "@better-auth/prisma-adapter": "^1.6.25",
     "@hookform/resolvers": "^5.5.7",
+    "@prisma/client": "^6.19.2",
     "@tanstack/react-query": "^5.101.4",
+    "better-auth": "^1.6.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.27.0",
@@ -39,6 +44,7 @@
     "eslint": "9.39.1",
     "eslint-config-next": "^16.2.12",
     "jsdom": "26.1.0",
+    "prisma": "^6.19.2",
     "tailwindcss": "^4.3.3",
     "typescript": "5.9.3",
     "vitest": "3.2.7"

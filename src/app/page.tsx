@@ -1,4 +1,5 @@
 import { ArrowRight, Check, Layers3, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 import { Card } from "@/shared/ui/card";
 
@@ -16,9 +17,10 @@ export default function HomePage() {
           </span>
           CareerOS
         </a>
-        <span className="rounded-full border border-[var(--line)] bg-white/60 px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">
-          Foundation preview
-        </span>
+        <div className="flex items-center gap-2">
+          <Link href="/sign-in" className="rounded-full px-3 py-2 text-sm font-bold text-[var(--muted)] hover:bg-white/70">Sign in</Link>
+          <Link href="/sign-up" className="rounded-full bg-[var(--ink)] px-4 py-2 text-sm font-bold text-[var(--paper)]">Create account</Link>
+        </div>
       </nav>
 
       <section id="top" className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 pb-12 pt-20 lg:grid-cols-[1.08fr_.92fr] lg:pt-28">
@@ -34,9 +36,9 @@ export default function HomePage() {
             CareerOS turns verified experience into a living career profile—then helps you create honest, explainable applications for every opportunity.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
-            <span className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[var(--ink)] px-6 font-semibold text-[var(--paper)] shadow-[0_12px_32px_rgba(20,28,24,.2)]">
-              Account setup arrives next <ArrowRight className="size-4" aria-hidden="true" />
-            </span>
+            <Link href="/sign-up" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[var(--ink)] px-6 font-semibold text-[var(--paper)] shadow-[0_12px_32px_rgba(20,28,24,.2)]">
+              Start with your resume <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
             <span className="text-sm font-medium text-[var(--muted)]">AI suggests. You decide.</span>
           </div>
         </div>

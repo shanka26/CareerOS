@@ -2,14 +2,14 @@
 
 ## Prerequisites
 
-- Node.js 20.19 or newer (the initial foundation was also verified successfully on 20.14)
+- Node.js 22 or newer (Better Auth's current database layer requires it; build verification also passed on the available Node 20.14 runtime, but that runtime is not supported for deployment)
 - npm 10 or newer
 - PostgreSQL with pgvector beginning in Milestone 3
 
 ## Local setup
 
 1. Copy `.env.example` to `.env.local` and replace only the values needed for the milestone you are running.
-2. Run `npm ci` after the lockfile exists.
+2. Run `npm ci`. Prisma Client is generated automatically after installation.
 3. Run `npm run dev` and open `http://localhost:3000`.
 
 Never commit `.env`, `.env.local`, credentials, uploaded resumes, or generated private documents.
