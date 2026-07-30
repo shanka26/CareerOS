@@ -25,6 +25,8 @@
     "@better-auth/prisma-adapter": "^1.6.25",
     "@hookform/resolvers": "^5.5.7",
     "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "0.12.4",
+    "@supabase/supabase-js": "2.111.0",
     "@tanstack/react-query": "^5.101.4",
     "better-auth": "^1.6.25",
     "class-variance-authority": "^0.7.1",

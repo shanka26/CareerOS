@@ -17,8 +17,8 @@ CareerOS is an upload-first AI career operating system. It turns user-verified c
 
 Prerequisites: Node.js 22.3+, npm 10+, and PostgreSQL 16 with pgvector.
 
-1. Copy `.env.example` to `.env.local` and provide database/auth values.
-2. Start PostgreSQL with `docker compose up -d postgres` or use an equivalent pgvector database.
+1. Create a Supabase project and follow [the Supabase setup guide](./docs/SUPABASE.md), or start the optional local database with `docker compose up -d postgres`.
+2. Copy `.env.example` to `.env.local` and provide database/auth values.
 3. Install dependencies with `npm ci`.
 4. Apply migrations with `npm run db:migrate:deploy`.
 5. Start CareerOS with `npm run dev` and visit `http://localhost:3000`.
@@ -34,6 +34,7 @@ Google OAuth remains unavailable when its credentials are omitted. The OpenAI Re
 - [Implementation plan](./docs/IMPLEMENTATION_PLAN.md)
 - [Development guide](./docs/DEVELOPMENT.md)
 - [Database and migrations](./docs/DATABASE.md)
+- [Supabase setup](./docs/SUPABASE.md)
 - [Authentication](./docs/AUTHENTICATION.md)
 - [Career Profile ingestion](./docs/CAREER_PROFILE.md)
 - [Deployment](./docs/DEPLOYMENT.md)

@@ -2,6 +2,8 @@
 
 CareerOS uses PostgreSQL, Prisma 6, and pgvector. The schema is in `prisma/schema.prisma`; immutable SQL migration history is in `prisma/migrations`.
 
+Supabase is the recommended managed PostgreSQL provider. See [SUPABASE.md](./SUPABASE.md) for connection modes, project setup, and migration instructions.
+
 ## Local PostgreSQL
 
 The optional `compose.yaml` uses the official pgvector 0.8.2 PostgreSQL 16 image. With Docker installed:
