@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import { promptVersions } from "@/domains/assistant/capabilities";
+import { createSafetyIdentifier, getConfiguredAIModel, getConfiguredAIProvider } from "@/domains/assistant/runtime";
 import { checksumKnowledgeFacts } from "@/domains/career/knowledge-snapshot";
-import { composeVerifiedCoverLetter } from "@/domains/documents/cover-letter-composer";
+import {
+  assertGroundedDocument,
+  buildGenerationFactCatalog,
+  coverLetterGenerationInstructions,
+  generatedDocumentSchema,
+} from "@/domains/documents/ai-document-generation";
 import { getSession } from "@/domains/settings/auth/session";
 import { prisma } from "@/shared/db/prisma";
 
@@ -11,6 +18,8 @@ export async function POST(
   const started = Date.now();
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const provider = getConfiguredAIProvider();
+  if (!provider) return NextResponse.json({ error: "AI document generation is not configured." }, { status: 503 });
 
   const { id } = await params;
   const [job, profile] = await Promise.all([
@@ -49,38 +58,62 @@ export async function POST(
     education: profile.education.map((education) => ({ id: education.id, school: education.school, degree: education.degree, field: education.field })),
     certifications: profile.certifications.map((certification) => ({ id: certification.id, name: certification.name, issuer: certification.issuer })),
   };
-  const composed = composeVerifiedCoverLetter(facts, {
-    title: job.title,
-    company: job.companyName,
-  });
   const checksum = checksumKnowledgeFacts(facts);
-  const document = await prisma.$transaction(async (transaction) => {
-    const snapshot = await transaction.knowledgeSnapshot.upsert({
-      where: { userId_checksum: { userId: session.user.id, checksum } },
-      update: {},
-      create: { userId: session.user.id, checksum, facts },
+  const snapshot = await prisma.knowledgeSnapshot.upsert({
+    where: { userId_checksum: { userId: session.user.id, checksum } },
+    update: {},
+    create: { userId: session.user.id, checksum, facts },
+  });
+  const factCatalog = buildGenerationFactCatalog(facts, { title: job.title, company: job.companyName, description: job.description });
+  let generated;
+  try {
+    const result = await provider.generate({
+      capability: "generate-cover-letter",
+      instructions: coverLetterGenerationInstructions,
+      input: { factCatalog },
+      outputSchema: generatedDocumentSchema,
+      schemaName: "career_cover_letter",
+      safetyIdentifier: createSafetyIdentifier(session.user.id),
     });
+    generated = { ...result, data: assertGroundedDocument(result.data, factCatalog) };
+  } catch (error) {
+    await prisma.generationLog.create({
+      data: {
+        userId: session.user.id,
+        provider: "openai",
+        model: getConfiguredAIModel(),
+        action: "generate-cover-letter",
+        promptVersion: promptVersions["generate-cover-letter"],
+        inputSnapshotId: snapshot.id,
+        durationMs: Date.now() - started,
+        success: false,
+        errorCode: error instanceof Error ? error.name : "UnknownError",
+      },
+    }).catch(() => undefined);
+    return NextResponse.json({ error: "AI cover-letter generation failed. Please try again." }, { status: 502 });
+  }
+  const document = await prisma.$transaction(async (transaction) => {
     const created = await transaction.document.create({
       data: {
         ownerId: session.user.id,
         type: "GENERATED_COVER_LETTER",
         title: `${job.companyName} - ${job.title} Cover Letter`,
-        markdown: composed.markdown,
+        markdown: generated.data.markdown,
         versions: {
           create: {
             version: 1,
-            markdown: composed.markdown,
-            aiProvider: "deterministic",
-            aiModel: "verified-fact-strategy/v1",
-            promptVersion: "generate-cover-letter/v1",
+            markdown: generated.data.markdown,
+            aiProvider: generated.provider,
+            aiModel: generated.model,
+            promptVersion: promptVersions["generate-cover-letter"],
             knowledgeSnapshotId: snapshot.id,
-            changeExplanation: composed.explanations,
+            changeExplanation: generated.data.explanations,
           },
         },
       },
       include: { versions: true },
     });
-    await transaction.generationLog.create({ data: { userId: session.user.id, provider: "deterministic", model: "verified-fact-strategy/v1", action: "generate-cover-letter", promptVersion: "generate-cover-letter/v1", inputSnapshotId: snapshot.id, outputDocumentId: created.versions[0]!.id, durationMs: Date.now() - started, success: true } });
+    await transaction.generationLog.create({ data: { userId: session.user.id, provider: generated.provider, model: generated.model, action: "generate-cover-letter", promptVersion: promptVersions["generate-cover-letter"], inputSnapshotId: snapshot.id, outputDocumentId: created.versions[0]!.id, durationMs: generated.durationMs, success: true } });
     return created;
   });
   return NextResponse.json({ documentId: document.id }, { status: 201 });

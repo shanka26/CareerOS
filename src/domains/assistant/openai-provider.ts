@@ -7,7 +7,9 @@ import type { AIProvider, AIRequest, AIResult } from "./provider";
 
 export class OpenAIResponsesProvider implements AIProvider {
   private readonly client: OpenAI;
-  constructor(private readonly apiKey: string, private readonly model = "gpt-5.6-terra") { this.client = new OpenAI({ apiKey }); }
+  constructor(private readonly apiKey: string, private readonly model = "gpt-5.6-terra") {
+    this.client = new OpenAI({ apiKey });
+  }
 
   async generate<TSchema extends z.ZodType>(request: AIRequest<TSchema>): Promise<AIResult<z.infer<TSchema>>> {
     const started = Date.now();

@@ -23,7 +23,7 @@ Prerequisites: Node.js 22.3+, npm 10+, and PostgreSQL 16 with pgvector.
 4. Apply migrations with `npm run db:migrate:deploy`.
 5. Start CareerOS with `npm run dev` and visit `http://localhost:3000`.
 
-Google OAuth remains unavailable when its credentials are omitted. The OpenAI Responses adapter exists but is not wired into user-facing generation, which currently uses a labeled deterministic grounded strategy. Production object storage is not implemented and uploads fail closed in production. No code path invents credentials or claims those integrations were live-tested.
+Google OAuth remains unavailable when its credentials are omitted. Resume and cover-letter routes use the OpenAI Responses API when `OPENAI_API_KEY` is configured, with structured outputs, verified-fact citation checks, no-store requests, and model/prompt provenance. Production object storage is not implemented and uploads fail closed in production. No code path invents credentials.
 
 ## Verification
 

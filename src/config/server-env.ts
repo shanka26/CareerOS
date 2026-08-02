@@ -12,6 +12,12 @@ const serverEnvSchema = z
     BETTER_AUTH_URL: z.url().optional(),
     GOOGLE_CLIENT_ID: optionalCredential,
     GOOGLE_CLIENT_SECRET: optionalCredential,
+    OPENAI_API_KEY: optionalCredential,
+    OPENAI_MODEL: z.string().trim().min(1).default("gpt-5.6-terra"),
+    VERCEL: optionalCredential,
+    VERCEL_URL: optionalCredential,
+    VERCEL_BRANCH_URL: optionalCredential,
+    VERCEL_PROJECT_PRODUCTION_URL: optionalCredential,
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     NEXT_PHASE: z.string().optional(),
   })
@@ -42,3 +48,4 @@ export function requireRuntimeEnv(key: "DATABASE_URL" | "BETTER_AUTH_SECRET"): s
 }
 
 export const googleAuthEnabled = Boolean(serverEnv.GOOGLE_CLIENT_ID && serverEnv.GOOGLE_CLIENT_SECRET);
+export const openAIEnabled = Boolean(serverEnv.OPENAI_API_KEY);

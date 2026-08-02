@@ -11,6 +11,8 @@ CareerOS uses Better Auth with its Prisma adapter. Email/password is always conf
 
 The build can statically compile without credentials. A real authentication request fails closed with an actionable configuration error when the database URL or secret is absent.
 
+On Vercel, CareerOS also reads the platform-provided `VERCEL_URL`, `VERCEL_BRANCH_URL`, and `VERCEL_PROJECT_PRODUCTION_URL`. Their exact HTTPS origins are trusted automatically so production and preview deployments pass Better Auth origin validation without allowing a broad `*.vercel.app` wildcard. Keep Vercel's **Automatically expose System Environment Variables** project setting enabled. Set `BETTER_AUTH_URL` to the canonical custom or production domain when one exists; a localhost value is ignored on Vercel in favor of the current deployment URL.
+
 ## Google OAuth
 
 Set both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Configure this authorized redirect URI in Google Cloud:

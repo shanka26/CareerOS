@@ -39,7 +39,7 @@ npm run db:check
 
 `prisma.config.ts` loads the ignored `.env.local` for local Prisma CLI commands. CI and production release jobs should inject the same variables from their secret managers; committed environment files are never required.
 
-`db:check` reports the connected database, role, PostgreSQL version, SSL state, pgvector version, and completed migration count. It deliberately never prints either connection URL.
+`db:check` reports the connected database, role, PostgreSQL version, configured client SSL mode, database-backend SSL visibility, pgvector version, and completed migration count. Supavisor may terminate client TLS before its database-side connection, so `pg_stat_ssl` may not report backend SSL even when the client connection requires it. The check deliberately never prints either connection URL.
 
 The committed initial migration enables the `vector` extension before creating the `KnowledgeEmbedding` table. After migration, confirm in the Supabase dashboard that `_prisma_migrations` and the CareerOS tables exist and that the `vector` extension is enabled.
 
@@ -56,6 +56,7 @@ Verify account creation, sign-in, session persistence, resume upload, career-fac
 ## Security boundaries
 
 - All application data access remains server-side through Prisma and authenticated owner-scoped queries.
+- The security migration revokes `anon` and `authenticated` access to public tables, sequences, and functions and enables RLS as defense in depth. CareerOS does not define Supabase Data API policies because it does not use the Data API.
 - Do not add `NEXT_PUBLIC_` to database credentials or a Supabase service-role key.
 - Supabase Row Level Security does not replace CareerOS authorization because Prisma connects server-side. Owner filters and relational constraints remain mandatory.
 - Use SSL for hosted connections, rotate credentials after exposure, enable Supabase database backups, and review connection usage in Supabase observability.

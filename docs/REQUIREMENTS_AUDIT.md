@@ -19,7 +19,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## Partial or externally blocked
 
 - Email/password and Google OAuth code is present, but no live PostgreSQL or Google credentials are available for end-to-end authentication validation.
-- Resume parsing and document strategy are conservative deterministic adapters. The OpenAI Responses provider and typed orchestration boundary exist, but user-facing flows do not invoke them yet. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
+- Resume parsing remains a conservative deterministic adapter. User-facing resume and cover-letter generation invokes the OpenAI Responses provider when configured, validates structured output and fact citations, and records exact provenance. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
 - Production S3-compatible storage, malware scanning, retention/deletion controls, and lifecycle jobs are not implemented. The local storage adapter intentionally fails closed in production.
 - PDF export is deterministic and tested for valid/version-specific output, but it is a basic text layout rather than a polished multi-template resume renderer.
 - URL policy tests cover private/local addresses, credentials, schemes, and ports. DNS rebinding protection still requires a fetch transport that pins the validated address in production.

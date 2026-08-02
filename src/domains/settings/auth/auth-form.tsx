@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/shared/ui/button";
 
 import { authClient } from "./client";
+import { getAuthErrorMessage, getUnexpectedAuthErrorMessage } from "./error-message";
 import { signInSchema, signUpSchema, type SignInInput, type SignUpInput } from "./schemas";
 
 type Mode = "sign-in" | "sign-up";
@@ -50,26 +51,38 @@ export function AuthForm({ initialMode, googleEnabled, nextPath }: { initialMode
 
   const onSignIn = signInForm.handleSubmit(async (values) => {
     setServerError(undefined);
-    const result = await authClient.signIn.email({ ...values, callbackURL });
-    if (result.error) return setServerError(result.error.message ?? "We could not sign you in.");
-    router.push(callbackURL);
-    router.refresh();
+    try {
+      const result = await authClient.signIn.email({ ...values, callbackURL });
+      if (result.error) return setServerError(getAuthErrorMessage("sign-in", result.error));
+      router.push(callbackURL);
+      router.refresh();
+    } catch (error) {
+      setServerError(getUnexpectedAuthErrorMessage("sign-in", error));
+    }
   });
 
   const onSignUp = signUpForm.handleSubmit(async (values) => {
     setServerError(undefined);
-    const result = await authClient.signUp.email({ name: values.name, email: values.email, password: values.password, callbackURL });
-    if (result.error) return setServerError(result.error.message ?? "We could not create your account.");
-    router.push(callbackURL);
-    router.refresh();
+    try {
+      const result = await authClient.signUp.email({ name: values.name, email: values.email, password: values.password, callbackURL });
+      if (result.error) return setServerError(getAuthErrorMessage("sign-up", result.error));
+      router.push(callbackURL);
+      router.refresh();
+    } catch (error) {
+      setServerError(getUnexpectedAuthErrorMessage("sign-up", error));
+    }
   });
 
   const continueWithGoogle = async () => {
     setGooglePending(true);
     setServerError(undefined);
-    const result = await authClient.signIn.social({ provider: "google", callbackURL });
-    if (result?.error) {
-      setServerError(result.error.message ?? "Google sign-in could not start.");
+    try {
+      const result = await authClient.signIn.social({ provider: "google", callbackURL });
+      if (!result?.error) return;
+      setServerError(getAuthErrorMessage("google", result.error));
+      setGooglePending(false);
+    } catch (error) {
+      setServerError(getUnexpectedAuthErrorMessage("google", error));
       setGooglePending(false);
     }
   };
@@ -100,7 +113,7 @@ export function AuthForm({ initialMode, googleEnabled, nextPath }: { initialMode
       )}
 
       <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.18em] text-[var(--muted)] before:h-px before:flex-1 before:bg-[var(--line)] after:h-px after:flex-1 after:bg-[var(--line)]">or use email</div>
-      {serverError ? <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">{serverError}</div> : null}
+      {serverError ? <div role="alert" aria-live="assertive" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">{serverError}</div> : null}
 
       {mode === "sign-in" ? (
         <form className="grid gap-4" onSubmit={onSignIn} noValidate>

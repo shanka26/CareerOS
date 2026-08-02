@@ -3,16 +3,19 @@ import "server-only";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { betterAuth } from "better-auth";
 
+import { getAuthOriginConfig } from "@/config/auth-origins";
 import { googleAuthEnabled, requireRuntimeEnv, serverEnv } from "@/config/server-env";
 import { prisma } from "@/shared/db/prisma";
 
 const socialProviders = googleAuthEnabled
   ? { google: { clientId: serverEnv.GOOGLE_CLIENT_ID!, clientSecret: serverEnv.GOOGLE_CLIENT_SECRET!, prompt: "select_account" as const } }
   : undefined;
+const authOrigins = getAuthOriginConfig(serverEnv);
 
 export const auth = betterAuth({
   appName: "CareerOS",
-  baseURL: serverEnv.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: authOrigins.baseURL,
+  trustedOrigins: authOrigins.trustedOrigins,
   secret: requireRuntimeEnv("BETTER_AUTH_SECRET"),
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: { enabled: true, minPasswordLength: 10, maxPasswordLength: 128 },

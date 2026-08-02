@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 
 const schema = readFileSync(join(process.cwd(), "prisma", "schema.prisma"), "utf8");
 const migration = readFileSync(join(process.cwd(), "prisma", "migrations", "20260729160000_initial", "migration.sql"), "utf8");
+const securityMigration = readFileSync(
+  join(process.cwd(), "prisma", "migrations", "20260802150000_secure_supabase_data_api", "migration.sql"),
+  "utf8",
+);
 
 describe("database safety contract", () => {
   it("keeps AI suggestions pending by default", () => {
@@ -18,5 +22,14 @@ describe("database safety contract", () => {
   it("enables pgvector before creating vector columns", () => {
     expect(migration.indexOf("CREATE EXTENSION IF NOT EXISTS vector")).toBeGreaterThan(-1);
     expect(migration.indexOf("CREATE EXTENSION IF NOT EXISTS vector")).toBeLessThan(migration.indexOf('CREATE TABLE "knowledge_embedding"'));
+  });
+
+  it("blocks Supabase Data API roles and enables row-level security", () => {
+    expect(securityMigration).toContain(
+      "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM anon, authenticated",
+    );
+    expect(securityMigration).toContain('ALTER TABLE IF EXISTS public."account" ENABLE ROW LEVEL SECURITY');
+    expect(securityMigration).toContain('ALTER TABLE IF EXISTS public."session" ENABLE ROW LEVEL SECURITY');
+    expect(securityMigration).toContain('ALTER TABLE IF EXISTS public."career_metric" ENABLE ROW LEVEL SECURITY');
   });
 });
