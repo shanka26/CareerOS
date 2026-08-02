@@ -18,7 +18,7 @@ CareerOS is an upload-first AI career operating system. It turns user-verified c
 Prerequisites: Node.js 22.3+, npm 10+, and PostgreSQL 16 with pgvector.
 
 1. Copy `.env.example` to `.env.local` and provide database/auth values.
-2. Start PostgreSQL with `docker compose up -d postgres` or use an equivalent pgvector database.
+2. Configure a Supabase project using [the Supabase guide](./docs/SUPABASE.md), or start local PostgreSQL with `docker compose up -d postgres`.
 3. Install dependencies with `npm ci`.
 4. Apply migrations with `npm run db:migrate:deploy`.
 5. Start CareerOS with `npm run dev` and visit `http://localhost:3000`.
