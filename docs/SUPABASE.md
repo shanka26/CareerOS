@@ -34,9 +34,12 @@ With `DATABASE_URL` and `DIRECT_URL` present only in `.env.local` or the deploym
 ```powershell
 npm run db:validate
 npm run db:migrate:deploy
+npm run db:check
 ```
 
 `prisma.config.ts` loads the ignored `.env.local` for local Prisma CLI commands. CI and production release jobs should inject the same variables from their secret managers; committed environment files are never required.
+
+`db:check` reports the connected database, role, PostgreSQL version, SSL state, pgvector version, and completed migration count. It deliberately never prints either connection URL.
 
 The committed initial migration enables the `vector` extension before creating the `KnowledgeEmbedding` table. After migration, confirm in the Supabase dashboard that `_prisma_migrations` and the CareerOS tables exist and that the `vector` extension is enabled.
 

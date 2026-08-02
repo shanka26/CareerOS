@@ -29,6 +29,8 @@ Google OAuth remains unavailable when its credentials are omitted. The OpenAI Re
 
 `npm run check` runs lint, strict type checking, unit tests, and a production build. `npm run db:validate` validates the Prisma schema. PostgreSQL integration and real external-provider verification require operator-supplied services.
 
+After configuring Supabase and applying migrations, `npm run db:check` verifies database connectivity, SSL, pgvector, and migration state without printing credentials.
+
 ## Documentation
 
 - [Implementation plan](./docs/IMPLEMENTATION_PLAN.md)
