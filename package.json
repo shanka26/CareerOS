@@ -28,6 +28,7 @@
     "@napi-rs/canvas": "0.1.80",
     "@prisma/client": "^6.19.3",
     "@tanstack/react-query": "^5.101.4",
+    "@vercel/blob": "^2.6.1",
     "better-auth": "^1.6.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

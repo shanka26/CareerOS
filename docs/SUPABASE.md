@@ -60,7 +60,7 @@ Verify account creation, sign-in, session persistence, resume upload, career-fac
 - Do not add `NEXT_PUBLIC_` to database credentials or a Supabase service-role key.
 - Supabase Row Level Security does not replace CareerOS authorization because Prisma connects server-side. Owner filters and relational constraints remain mandatory.
 - Use SSL for hosted connections, rotate credentials after exposure, enable Supabase database backups, and review connection usage in Supabase observability.
-- Supabase database backups do not include uploaded resume objects. Production object storage needs its own backup, retention, malware-scanning, and deletion controls.
+- Supabase database backups do not include uploaded resume objects. Private Vercel Blob storage needs its own retention, malware-scanning, deletion, and recovery policy.
 
 ## Optional future Supabase services
 

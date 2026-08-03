@@ -1,11 +1,10 @@
-import { unlink } from "node:fs/promises";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/domains/settings/auth/session";
 import { buildConservativeResumeDraft } from "@/domains/career/resume/draft";
 import { extractResumeText } from "@/domains/career/resume/extract-text";
 import { validateResumeFile } from "@/domains/career/resume/file-policy";
-import { storeResumeLocally } from "@/domains/career/resume/local-storage";
+import { storeResume } from "@/domains/career/resume/storage";
 import { prisma } from "@/shared/db/prisma";
 
 export const runtime = "nodejs";
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
-  let storedPath: string | undefined;
+  let storedResume: Awaited<ReturnType<typeof storeResume>> | undefined;
   try {
     const formData = await request.formData();
     const file = formData.get("resume");
@@ -24,8 +23,8 @@ export async function POST(request: Request) {
     const kind = validateResumeFile(bytes, file.name);
     const rawText = await extractResumeText(bytes, kind);
     const draft = buildConservativeResumeDraft(rawText);
-    const savedPath = await storeResumeLocally(session.user.id, bytes, kind);
-    storedPath = savedPath;
+    const savedResume = await storeResume(session.user.id, bytes, kind);
+    storedResume = savedResume;
 
     const result = await prisma.$transaction(async (tx) => {
       const document = await tx.document.create({
@@ -35,8 +34,8 @@ export async function POST(request: Request) {
           status: "DRAFT",
           title: file.name.replace(/\.(pdf|docx)$/i, ""),
           markdown: rawText,
-          pdfPath: savedPath,
-          versions: { create: { version: 1, markdown: rawText, pdfPath: savedPath } },
+          pdfPath: savedResume.location,
+          versions: { create: { version: 1, markdown: rawText, pdfPath: savedResume.location } },
         },
       });
       const suggestion = await tx.memorySuggestion.create({
@@ -47,7 +46,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (storedPath) await unlink(storedPath).catch(() => undefined);
+    if (storedResume) await storedResume.remove().catch(() => undefined);
     const message = error instanceof Error ? error.message : "Resume processing failed.";
     return NextResponse.json({ error: message }, { status: 400 });
   }

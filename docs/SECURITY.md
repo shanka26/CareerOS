@@ -2,7 +2,7 @@
 
 CareerOS stores sensitive career and application data. Protected routes validate a Better Auth session and aggregate queries scope data to the authenticated owner. User IDs are never accepted as authorization input.
 
-Uploads are size-bounded, magic-byte checked, parsed as untrusted content, and stored under randomized keys. Job URL import requires public HTTPS destinations and applies private-network, redirect, timeout, size, and content-type controls. Production uploads require private object storage and malware scanning.
+Uploads are size-bounded, magic-byte checked, parsed as untrusted content, and stored in private Vercel Blob under pseudonymous randomized keys. Job URL import requires public HTTPS destinations and applies private-network, redirect, timeout, size, and content-type controls. Automated malware scanning and storage retention/deletion policies are not yet implemented.
 
 Factual AI output is restricted to verified source facts, records provenance, uses no-store requests, and cannot silently mutate the Career Profile. Pending suggestions require explicit review. Documents and applications preserve immutable versions and knowledge snapshots.
 

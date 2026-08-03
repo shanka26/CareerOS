@@ -20,7 +20,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 
 - Email/password and Google OAuth code is present, but no live PostgreSQL or Google credentials are available for end-to-end authentication validation.
 - Resume parsing remains a conservative deterministic adapter. User-facing resume and cover-letter generation invokes the OpenAI Responses provider when configured, validates structured output and fact citations, and records exact provenance. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
-- Production S3-compatible storage, malware scanning, retention/deletion controls, and lifecycle jobs are not implemented. The local storage adapter intentionally fails closed in production.
+- Private Vercel Blob storage is implemented and connected in Production. Automated malware scanning, retention/deletion controls, and lifecycle jobs remain incomplete.
 - PDF export is deterministic and tested for valid/version-specific output, but it is a basic text layout rather than a polished multi-template resume renderer.
 - URL policy tests cover private/local addresses, credentials, schemes, and ports. DNS rebinding protection still requires a fetch transport that pins the validated address in production.
 - No disposable PostgreSQL, Docker, provider credentials, or browser E2E environment is available here. Database migrations and the fourteen-step journey therefore remain unverified against live services.
@@ -37,7 +37,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## Next release gates
 
 1. Wire specialist AI strategies into user-facing flows without allowing free-form factual invention; validate all cited fact IDs and preserve explicit review.
-2. Implement private production object storage, malware scanning, lifecycle, export, and deletion controls.
+2. Add malware scanning, storage lifecycle/retention, export, and deletion controls to the private production Blob implementation.
 3. Run disposable-PostgreSQL route integration tests and browser E2E tests for the full new-user journey.
 4. Upgrade to a patched stable Next.js release and obtain a clean production dependency audit.
 5. Validate OAuth, OpenAI, job URL compatibility, storage, migrations, backups, and observability in staging before marking the MVP production-ready.

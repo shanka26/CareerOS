@@ -23,7 +23,7 @@ Prerequisites: Node.js 22.3+, npm 10+, and PostgreSQL 16 with pgvector.
 4. Apply migrations with `npm run db:migrate:deploy`.
 5. Start CareerOS with `npm run dev` and visit `http://localhost:3000`.
 
-Google OAuth remains unavailable when its credentials are omitted. Resume and cover-letter routes use the OpenAI Responses API when `OPENAI_API_KEY` is configured, with structured outputs, verified-fact citation checks, no-store requests, and model/prompt provenance. Production object storage is not implemented and uploads fail closed in production. No code path invents credentials.
+Google OAuth remains unavailable when its credentials are omitted. Resume and cover-letter routes use the OpenAI Responses API when `OPENAI_API_KEY` is configured, with structured outputs, verified-fact citation checks, no-store requests, and model/prompt provenance. Production resume uploads use a connected private Vercel Blob store; local development uses `.data/uploads`. No code path invents credentials.
 
 ## Verification
 
