@@ -20,13 +20,17 @@ async function installPdfNodeGlobals() {
 export async function extractResumeText(bytes: Uint8Array, kind: ResumeFileKind) {
   let text: string;
   if (kind === "pdf") {
-    await installPdfNodeGlobals();
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: bytes });
     try {
-      text = (await parser.getText()).text;
-    } finally {
-      await parser.destroy();
+      await installPdfNodeGlobals();
+      const { PDFParse } = await import("pdf-parse");
+      const parser = new PDFParse({ data: bytes });
+      try {
+        text = (await parser.getText()).text;
+      } finally {
+        await parser.destroy();
+      }
+    } catch (cause) {
+      throw new Error("We could not read this PDF. Re-export it as a text-based PDF or upload the DOCX version.", { cause });
     }
   } else {
     const { default: mammoth } = await import("mammoth");

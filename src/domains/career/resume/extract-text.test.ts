@@ -21,4 +21,12 @@ describe("resume text extraction", () => {
     expect(text).toContain("Ada Lovelace");
     expect(globalThis.DOMMatrix).toBeTypeOf("function");
   });
+
+  it("does not expose parser internals for an unreadable PDF", async () => {
+    const malformedPdf = new TextEncoder().encode("%PDF-1.7\nmalformed");
+
+    await expect(extractResumeText(malformedPdf, "pdf")).rejects.toThrow(
+      "We could not read this PDF. Re-export it as a text-based PDF or upload the DOCX version.",
+    );
+  });
 });
