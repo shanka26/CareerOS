@@ -46,17 +46,24 @@ export async function POST(
     name: session.user.name,
     headline: profile.headline,
     summary: profile.summary,
-    skills: profile.careerSkills.map(({ skill }) => ({ id: skill.id, name: skill.name })),
+    targetRole: profile.targetRole,
+    preferredLocations: profile.preferredLocations,
+    remotePreference: profile.remotePreference,
+    careerGoals: profile.careerGoals,
+    skills: profile.careerSkills.map(({ skill, proficiency }) => ({ id: skill.id, name: skill.name, proficiency })),
     experiences: profile.experiences.map((experience) => ({
       id: experience.id,
       company: experience.company,
       title: experience.title,
+      startDate: experience.startDate?.toISOString() ?? null,
+      endDate: experience.endDate?.toISOString() ?? null,
+      current: experience.current,
       description: experience.description,
       achievements: experience.achievements.map((achievement) => ({ id: achievement.id, description: achievement.description, metric: achievement.metric })),
     })),
     projects: profile.projects.map((project) => ({ id: project.id, name: project.name, description: project.description, impact: project.impact, technologies: project.technologies })),
-    education: profile.education.map((education) => ({ id: education.id, school: education.school, degree: education.degree, field: education.field })),
-    certifications: profile.certifications.map((certification) => ({ id: certification.id, name: certification.name, issuer: certification.issuer })),
+    education: profile.education.map((education) => ({ id: education.id, school: education.school, degree: education.degree, field: education.field, graduationDate: education.graduationDate?.toISOString() ?? null })),
+    certifications: profile.certifications.map((certification) => ({ id: certification.id, name: certification.name, issuer: certification.issuer, issueDate: certification.issueDate?.toISOString() ?? null, expirationDate: certification.expirationDate?.toISOString() ?? null })),
   };
   const checksum = checksumKnowledgeFacts(facts);
   const snapshot = await prisma.knowledgeSnapshot.upsert({

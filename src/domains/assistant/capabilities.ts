@@ -4,7 +4,9 @@ export type AICapability = (typeof aiCapabilities)[number];
 export const promptVersions: Record<AICapability, string> = Object.fromEntries(
   aiCapabilities.map((capability) => [
     capability,
-    capability === "generate-resume" || capability === "generate-cover-letter"
+    capability === "analyze-resume"
+      ? "analyze-resume/v2"
+      : capability === "generate-resume" || capability === "generate-cover-letter"
       ? `${capability}/v2`
       : `${capability}/v1`,
   ]),

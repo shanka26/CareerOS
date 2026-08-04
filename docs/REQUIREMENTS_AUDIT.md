@@ -19,7 +19,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## Partial or externally blocked
 
 - Email/password and Google OAuth code is present, but no live PostgreSQL or Google credentials are available for end-to-end authentication validation.
-- Resume parsing remains a conservative deterministic adapter. User-facing resume and cover-letter generation invokes the OpenAI Responses provider when configured, validates structured output and fact citations, and records exact provenance. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
+- Resume parsing now invokes a comprehensive OpenAI structured-output analysis for every Career Profile entity and an evidence-linked resume report. Exact source excerpts are locally validated, unsupported values fail closed, missing values remain explicit, approval persists all selected facts, and later document generation consumes the expanded verified fact set. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
 - Private Vercel Blob storage is implemented and connected in Production. Automated malware scanning, retention/deletion controls, and lifecycle jobs remain incomplete.
 - PDF export is deterministic and tested for valid/version-specific output, but it is a basic text layout rather than a polished multi-template resume renderer.
 - URL policy tests cover private/local addresses, credentials, schemes, and ports. DNS rebinding protection still requires a fetch transport that pins the validated address in production.

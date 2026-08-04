@@ -29,11 +29,15 @@ export function buildGenerationFactCatalog(
     { id: "profile:name", kind: "candidate-name", value: facts.name },
     ...(facts.headline ? [{ id: "profile:headline", kind: "candidate-headline", value: facts.headline }] : []),
     ...(facts.summary ? [{ id: "profile:summary", kind: "candidate-summary", value: facts.summary }] : []),
-    ...facts.skills.map((skill) => ({ id: skill.id, kind: "verified-skill", value: skill.name })),
+    ...(facts.targetRole ? [{ id: "profile:target-role", kind: "verified-target-role", value: facts.targetRole }] : []),
+    ...((facts.preferredLocations?.length ?? 0) ? [{ id: "profile:preferred-locations", kind: "verified-location-preferences", value: facts.preferredLocations }] : []),
+    ...(facts.remotePreference ? [{ id: "profile:remote-preference", kind: "verified-work-preference", value: facts.remotePreference }] : []),
+    ...((facts.careerGoals?.length ?? 0) ? [{ id: "profile:career-goals", kind: "verified-career-goals", value: facts.careerGoals }] : []),
+    ...facts.skills.map((skill) => ({ id: skill.id, kind: "verified-skill", value: { name: skill.name, proficiency: skill.proficiency ?? null } })),
     ...facts.experiences.map((experience) => ({
       id: experience.id,
       kind: "verified-experience",
-      value: { company: experience.company, title: experience.title, description: experience.description },
+      value: { company: experience.company, title: experience.title, startDate: experience.startDate ?? null, endDate: experience.endDate ?? null, current: experience.current ?? false, description: experience.description },
     })),
     ...facts.experiences.flatMap((experience) =>
       (experience.achievements ?? []).map((achievement) => ({

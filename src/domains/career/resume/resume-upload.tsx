@@ -42,8 +42,8 @@ export function ResumeUpload() {
       </label>
       {file ? <div className="flex items-center gap-3 rounded-xl bg-white/60 p-3 text-sm"><FileText className="size-4" /><span className="min-w-0 flex-1 truncate font-semibold">{file.name}</span><span className="text-[var(--muted)]">{(file.size / 1024).toFixed(0)} KB</span></div> : null}
       {error ? <p role="alert" className="text-sm font-semibold text-red-700">{error}</p> : null}
-      <Button type="submit" disabled={pending}>{pending ? <LoaderCircle className="mr-2 size-4 animate-spin" /> : null}Extract career information</Button>
-      <p className="text-xs leading-5 text-[var(--muted)]">Extraction creates a pending draft. Nothing becomes a verified career fact until you review and approve it.</p>
+      <Button type="submit" disabled={pending}>{pending ? <LoaderCircle className="mr-2 size-4 animate-spin" /> : null}Analyze my resume with AI</Button>
+      <p className="text-xs leading-5 text-[var(--muted)]">AI reads the extracted text, fills every supported career field, and creates an evidence-linked report. Missing information stays blank. The text is sent to the configured OpenAI API with API response storage disabled; nothing becomes a verified career fact until you review and approve it.</p>
     </form>
   );
 }

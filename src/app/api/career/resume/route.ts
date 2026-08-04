@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/domains/settings/auth/session";
-import { buildConservativeResumeDraft } from "@/domains/career/resume/draft";
+import { analyzeResumeText } from "@/domains/career/resume/analysis";
 import { extractResumeText } from "@/domains/career/resume/extract-text";
 import { validateResumeFile } from "@/domains/career/resume/file-policy";
 import { storeResume } from "@/domains/career/resume/storage";
 import { prisma } from "@/shared/db/prisma";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const kind = validateResumeFile(bytes, file.name);
     const rawText = await extractResumeText(bytes, kind);
-    const draft = buildConservativeResumeDraft(rawText);
+    const { analysis, provenance } = await analyzeResumeText(session.user.id, rawText);
     const savedResume = await storeResume(session.user.id, bytes, kind);
     storedResume = savedResume;
 
@@ -39,7 +40,12 @@ export async function POST(request: Request) {
         },
       });
       const suggestion = await tx.memorySuggestion.create({
-        data: { userId: session.user.id, source: `resume:${document.id}`, confidence: 0.6, proposedFact: JSON.parse(JSON.stringify(draft)) },
+        data: {
+          userId: session.user.id,
+          source: `resume:${document.id}`,
+          confidence: null,
+          proposedFact: JSON.parse(JSON.stringify({ ...analysis, rawText, provenance })),
+        },
       });
       return { documentId: document.id, suggestionId: suggestion.id };
     });

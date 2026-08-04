@@ -4,7 +4,7 @@ CareerOS stores sensitive career and application data. Protected routes validate
 
 Uploads are size-bounded, magic-byte checked, parsed as untrusted content, and stored in private Vercel Blob under pseudonymous randomized keys. Job URL import requires public HTTPS destinations and applies private-network, redirect, timeout, size, and content-type controls. Automated malware scanning and storage retention/deletion policies are not yet implemented.
 
-Factual AI output is restricted to verified source facts, records provenance, uses no-store requests, and cannot silently mutate the Career Profile. Pending suggestions require explicit review. Documents and applications preserve immutable versions and knowledge snapshots.
+Resume analysis sends bounded extracted text to the configured OpenAI API using structured outputs, a pseudonymous safety identifier, and `store: false`. Every extracted field and report claim must carry an exact source excerpt that is verified locally before persistence. Factual AI output cannot silently mutate the Career Profile; pending suggestions require explicit review. Documents and applications preserve immutable versions and knowledge snapshots.
 
 Baseline response headers disable framing, MIME sniffing, camera/microphone/geolocation, and cross-origin opener sharing. Secrets belong only in the deployment secret manager. Logs must exclude resume text, personal prompts, credentials, and document bodies.
 

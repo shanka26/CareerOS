@@ -2,11 +2,15 @@ export interface VerifiedCareerFacts {
   name: string;
   headline?: string | null;
   summary?: string | null;
-  skills: Array<{ id: string; name: string }>;
-  experiences: Array<{ id: string; company: string; title: string; description: string; achievements?: Array<{ id: string; description: string; metric?: string | null }> }>;
+  targetRole?: string | null;
+  preferredLocations?: string[];
+  remotePreference?: string | null;
+  careerGoals?: string[];
+  skills: Array<{ id: string; name: string; proficiency?: string | null }>;
+  experiences: Array<{ id: string; company: string; title: string; startDate?: string | null; endDate?: string | null; current?: boolean; description: string; achievements?: Array<{ id: string; description: string; metric?: string | null }> }>;
   projects?: Array<{ id: string; name: string; description: string; impact?: string | null; technologies: string[] }>;
-  education?: Array<{ id: string; school: string; degree?: string | null; field?: string | null }>;
-  certifications?: Array<{ id: string; name: string; issuer: string }>;
+  education?: Array<{ id: string; school: string; degree?: string | null; field?: string | null; graduationDate?: string | null }>;
+  certifications?: Array<{ id: string; name: string; issuer: string; issueDate?: string | null; expirationDate?: string | null }>;
 }
 
 export function composeVerifiedResume(facts: VerifiedCareerFacts, job: { title: string; company: string; description: string }) {
