@@ -8,6 +8,7 @@ export interface AIRequest<TSchema extends z.ZodType> {
   outputSchema: TSchema;
   schemaName: string;
   safetyIdentifier: string;
+  maxOutputTokens?: number;
 }
 
 export interface AIResult<T> { data: T; provider: string; model: string; durationMs: number; }

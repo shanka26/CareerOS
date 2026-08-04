@@ -2,6 +2,16 @@
 
 CareerOS uses PostgreSQL, Prisma 6, and pgvector. The schema is in `prisma/schema.prisma`; immutable SQL migration history is in `prisma/migrations`.
 
+## Supabase Postgres
+
+Supabase is the recommended hosted database for CareerOS. It is still PostgreSQL, so the Prisma schema, migrations, Better Auth adapter, ownership rules, and pgvector model remain unchanged. CareerOS does not query Supabase directly from the browser and does not expose a service-role key.
+
+The committed security migration revokes Supabase `anon` and `authenticated` privileges from the Prisma-managed public schema and enables RLS on every CareerOS table. This intentionally denies browser Data API access while preserving trusted server-side Prisma access.
+
+Set `DATABASE_URL` to the Supavisor transaction-mode URL on port `6543` for serverless or auto-scaling application traffic. Append `pgbouncer=true`, `connection_limit=1`, and `sslmode=require`. Set `DIRECT_URL` to the direct project URL on port `5432` for migrations. If the migration environment cannot reach Supabase's IPv6 direct endpoint, use the Supavisor session-mode URL on port `5432` as the documented IPv4 alternative.
+
+The initial migration enables `vector`, creates the CareerOS schema, and must run through `DIRECT_URL`; never run migrations through transaction mode. Password characters must be URL-encoded. See [SUPABASE.md](./SUPABASE.md) for the exact setup and validation sequence.
+
 ## Local PostgreSQL
 
 The optional `compose.yaml` uses the official pgvector 0.8.2 PostgreSQL 16 image. With Docker installed:
@@ -15,7 +25,7 @@ Docker was not available in the implementation environment, so container startup
 
 ## Production migration
 
-Set both `DATABASE_URL` (pooled application connection) and `DIRECT_URL` (direct migration connection), then run `npm run db:migrate:deploy` from a controlled release job. The database role applying the initial migration must be allowed to run `CREATE EXTENSION IF NOT EXISTS vector`. Do not use `prisma db push` in production.
+Set both `DATABASE_URL` (pooled application connection) and `DIRECT_URL` (direct or session-mode migration connection), then run `npm run db:migrate:deploy` from a controlled release job. The database role applying the initial migration must be allowed to run `CREATE EXTENSION IF NOT EXISTS vector`. Do not use `prisma db push` in production.
 
 ## Model decisions
 

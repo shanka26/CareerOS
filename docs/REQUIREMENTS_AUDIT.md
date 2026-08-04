@@ -8,7 +8,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## On-track functionality
 
 - Next.js App Router, strict TypeScript, domain-oriented modules, Tailwind/shadcn patterns, React Hook Form, TanStack Query, Zod, Better Auth, Prisma/PostgreSQL, and pgvector migration structure are present.
-- Upload-first PDF/DOCX intake enforces size and signature policies, extracts bounded text, creates a pending suggestion, and requires approval before profile mutation.
+- Upload-first PDF/DOC/DOCX intake enforces size and signature policies, uses bounded local extraction with AI-assisted recognition for no-text/scanned files, creates a pending suggestion, and requires approval before profile mutation.
 - Users can manually add and edit profile preferences, experience, achievements, skills, projects, education, and certifications. These user-authored facts are verified and owner-scoped.
 - Job paste/URL import, explicit field parsing, public-URL controls, requirements review, company record linkage, and verified-skill matching are implemented.
 - Resume and cover-letter composition uses verified facts only, records immutable knowledge snapshots, explanations, exact versions, and deterministic generation logs.
@@ -19,8 +19,8 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## Partial or externally blocked
 
 - Email/password and Google OAuth code is present, but no live PostgreSQL or Google credentials are available for end-to-end authentication validation.
-- Resume parsing and document strategy are conservative deterministic adapters. The OpenAI Responses provider and typed orchestration boundary exist, but user-facing flows do not invoke them yet. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
-- Production S3-compatible storage, malware scanning, retention/deletion controls, and lifecycle jobs are not implemented. The local storage adapter intentionally fails closed in production.
+- Resume parsing now invokes a comprehensive OpenAI structured-output analysis for every Career Profile entity and an evidence-linked resume report. Exact source excerpts are locally validated, unsupported values fail closed, missing values remain explicit, approval persists all selected facts, and later document generation consumes the expanded verified fact set. Company research and the broader specialist-agent catalog remain architecture capabilities, not completed product workflows.
+- Private Vercel Blob storage is implemented and connected in Production. Automated malware scanning, retention/deletion controls, and lifecycle jobs remain incomplete.
 - PDF export is deterministic and tested for valid/version-specific output, but it is a basic text layout rather than a polished multi-template resume renderer.
 - URL policy tests cover private/local addresses, credentials, schemes, and ports. DNS rebinding protection still requires a fetch transport that pins the validated address in production.
 - No disposable PostgreSQL, Docker, provider credentials, or browser E2E environment is available here. Database migrations and the fourteen-step journey therefore remain unverified against live services.
@@ -37,7 +37,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## Next release gates
 
 1. Wire specialist AI strategies into user-facing flows without allowing free-form factual invention; validate all cited fact IDs and preserve explicit review.
-2. Implement private production object storage, malware scanning, lifecycle, export, and deletion controls.
+2. Add malware scanning, storage lifecycle/retention, export, and deletion controls to the private production Blob implementation.
 3. Run disposable-PostgreSQL route integration tests and browser E2E tests for the full new-user journey.
 4. Upgrade to a patched stable Next.js release and obtain a clean production dependency audit.
 5. Validate OAuth, OpenAI, job URL compatibility, storage, migrations, backups, and observability in staging before marking the MVP production-ready.
