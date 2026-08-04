@@ -48,4 +48,17 @@ describe("resume storage", () => {
     expect(stored).toMatchObject({ location: "C:\\workspace\\.data\\uploads\\resume.docx", provider: "local" });
     expect(putMock).not.toHaveBeenCalled();
   });
+
+  it("uses the correct content type for legacy Word documents", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    putMock.mockResolvedValue({ url: "https://store.private.blob.vercel-storage.com/resumes/file.doc" });
+
+    await storeResume("user-123", new Uint8Array([0xd0, 0xcf]), "doc");
+
+    expect(putMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\.doc$/),
+      expect.any(Buffer),
+      expect.objectContaining({ contentType: "application/msword" }),
+    );
+  });
 });

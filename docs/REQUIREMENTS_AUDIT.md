@@ -8,7 +8,7 @@ This audit maps the Master Implementation Charter, PRD, Database Schema, Vision,
 ## On-track functionality
 
 - Next.js App Router, strict TypeScript, domain-oriented modules, Tailwind/shadcn patterns, React Hook Form, TanStack Query, Zod, Better Auth, Prisma/PostgreSQL, and pgvector migration structure are present.
-- Upload-first PDF/DOCX intake enforces size and signature policies, extracts bounded text, creates a pending suggestion, and requires approval before profile mutation.
+- Upload-first PDF/DOC/DOCX intake enforces size and signature policies, uses bounded local extraction with AI-assisted recognition for no-text/scanned files, creates a pending suggestion, and requires approval before profile mutation.
 - Users can manually add and edit profile preferences, experience, achievements, skills, projects, education, and certifications. These user-authored facts are verified and owner-scoped.
 - Job paste/URL import, explicit field parsing, public-URL controls, requirements review, company record linkage, and verified-skill matching are implemented.
 - Resume and cover-letter composition uses verified facts only, records immutable knowledge snapshots, explanations, exact versions, and deterministic generation logs.

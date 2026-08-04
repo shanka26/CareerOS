@@ -20,7 +20,7 @@ The default branch contains only five Markdown files: the README and the four au
 
 CareerOS is an upload-first AI career operating system. A resume initializes a structured, user-editable Career Knowledge Graph/Career Twin. Verified career facts—not generated documents—are the source of truth. Jobs, tailored resumes, cover letters, application records, and explainable recommendations are derived from that knowledge. Generated documents are versioned, reproducible artifacts tied to immutable knowledge snapshots and exact applications.
 
-The MVP includes authentication; PDF/DOCX resume ingestion; reviewable profile extraction; manual career profile editing; job URL/text import and analysis; verified-fact-only resume and cover-letter generation; versioned document storage; an application Kanban; an assistant; analytics; and approval-gated memory suggestions. Browser, email, calendar, collaboration, GitHub, full LinkedIn, and mobile integrations are non-goals.
+The MVP includes authentication; PDF/DOC/DOCX resume ingestion; reviewable profile extraction; manual career profile editing; job URL/text import and analysis; verified-fact-only resume and cover-letter generation; versioned document storage; an application Kanban; an assistant; analytics; and approval-gated memory suggestions. Browser, email, calendar, collaboration, GitHub, full LinkedIn, and mobile integrations are non-goals.
 
 ### Documented stack and architecture
 
@@ -46,7 +46,7 @@ The MVP includes authentication; PDF/DOCX resume ingestion; reviewable profile e
 1. Use the current stable releases resolved by the package manager, committing the lockfile. Pin runtime prerequisites in `package.json` and document them.
 2. Use PostgreSQL in production. Unit and component tests use isolated doubles; integration tests requiring PostgreSQL are explicitly gated by a test database URL.
 3. Store uploaded/generated file metadata in PostgreSQL and binary objects through a storage interface. A local development adapter is allowed, but production defaults fail closed when storage configuration is absent.
-4. Parse PDF/DOCX text through bounded server-side adapters. Uploaded facts begin unverified until the user reviews and accepts them.
+4. Parse PDF/DOC/DOCX text through bounded server-side adapters. Prefer deterministic local extraction, then use a no-store multimodal AI transcription fallback when supported files contain no meaningful text. Uploaded facts begin unverified until the user reviews and accepts them.
 5. Job URL import uses a hardened fetcher: HTTPS only, public destinations only, redirect/size/time limits, content-type checks, and no authenticated scraping. Pasted text is the reliable fallback.
 6. All mutations enforce ownership in the service/data layer, not only in UI or route handlers.
 7. AI features use typed capability contracts and a provider interface. Without an API key, explicit deterministic development/test adapters may demonstrate flows but are visibly labeled and never represented as real AI execution.
@@ -79,7 +79,7 @@ Translate the documented schema into Prisma models, enums, constraints, indexes,
 
 ### 4. Career Profile
 
-Implement upload-first PDF/DOCX onboarding, bounded parsing, extracted-data review, explicit verification, manual CRUD, completeness, preferences/goals, and knowledge suggestions.
+Implement upload-first PDF/DOC/DOCX onboarding, bounded local parsing plus AI-assisted recognition for scanned/image-only files, extracted-data review, explicit verification, manual CRUD, completeness, preferences/goals, and knowledge suggestions.
 
 **Depends on:** 2-3.  
 **Acceptance:** supported files can initialize a review screen; users can correct, accept, add, and edit their own facts; unsupported/oversized files fail safely; no extracted fact becomes verified without approval.
@@ -165,6 +165,7 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-08-04: Applied the operator's clarified upload acceptance requirement over the earlier OCR-not-supported implementation detail. Added AI-assisted, no-store transcription for scanned/no-text PDFs, embedded-image DOCX files, local-parser failures, and legacy DOC files; preserved original PDF bytes across PDF.js buffer transfer; bounded DOCX image expansion; updated disclosure copy; and added a representative parser/storage/request matrix.
 - 2026-08-03: Replaced the conservative headline/skills resume draft with comprehensive OpenAI structured extraction for profile fields, experience, achievements, skills, projects, education, certifications, additional facts, and a durable resume report. Every populated item cites exact locally verified source excerpts; prompt injection is treated as resume content, missing values remain blank, users can edit/exclude every record, approved facts feed later immutable generation snapshots, and accepted reports remain viewable.
 - 2026-08-03: Connected a private Production-only Vercel Blob store and routed production resume uploads through it using pseudonymous randomized keys, content types, fail-closed configuration, and orphan cleanup. Local development continues to use `.data/uploads`. Added adapter tests and documented that malware scanning, retention/lifecycle, and source-file deletion remain hardening work.
 - 2026-08-01: Confirmed the implementation branch was synchronized with GitHub and prepared Supabase Postgres as the recommended hosted backend. Added pooled runtime/direct migration connection guidance, SSL and IPv4/IPv6 handling, a dedicated Supabase runbook, and Prisma CLI `.env.local` loading. Prisma and Better Auth remain authoritative; Supabase Auth/Storage are not silently substituted.

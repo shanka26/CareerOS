@@ -9,6 +9,7 @@ import { storeResumeLocally } from "./local-storage";
 
 const resumeContentTypes: Record<ResumeFileKind, string> = {
   pdf: "application/pdf",
+  doc: "application/msword",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };
 

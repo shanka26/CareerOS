@@ -5,10 +5,11 @@ import { analyzeResumeText } from "@/domains/career/resume/analysis";
 import { extractResumeText } from "@/domains/career/resume/extract-text";
 import { validateResumeFile } from "@/domains/career/resume/file-policy";
 import { storeResume } from "@/domains/career/resume/storage";
+import { transcribeResumeFile } from "@/domains/career/resume/transcribe-file";
 import { prisma } from "@/shared/db/prisma";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -18,11 +19,13 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("resume");
-    if (!(file instanceof File)) return NextResponse.json({ error: "Choose a PDF or DOCX resume." }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: "Choose a PDF or Word resume." }, { status: 400 });
 
     const bytes = new Uint8Array(await file.arrayBuffer());
     const kind = validateResumeFile(bytes, file.name);
-    const rawText = await extractResumeText(bytes, kind);
+    const rawText = await extractResumeText(bytes, kind, (fileBytes, fileKind) =>
+      transcribeResumeFile(session.user.id, fileBytes, fileKind),
+    );
     const { analysis, provenance } = await analyzeResumeText(session.user.id, rawText);
     const savedResume = await storeResume(session.user.id, bytes, kind);
     storedResume = savedResume;
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
           ownerId: session.user.id,
           type: "BASE_RESUME",
           status: "DRAFT",
-          title: file.name.replace(/\.(pdf|docx)$/i, ""),
+          title: file.name.replace(/\.(pdf|docx?)$/i, ""),
           markdown: rawText,
           pdfPath: savedResume.location,
           versions: { create: { version: 1, markdown: rawText, pdfPath: savedResume.location } },

@@ -7,8 +7,15 @@ const MAX_DOCX_XML_BYTES = 10 * 1024 * 1024;
 
 const DOCX_TEXT_PART = /^word\/(?:document|header\d+|footer\d+|footnotes|endnotes)\.xml$/i;
 
+export type ResumeTextFallback = (bytes: Uint8Array, kind: ResumeFileKind) => Promise<string>;
+
 function normalizeExtractedText(text: string) {
-  return text.replace(/\u0000/g, "").replace(/\r\n?/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
+  return text
+    .replace(/\u0000/g, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/^-- \d+ of \d+ --$/gm, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
 }
 
 function decodeXmlText(value: string) {
@@ -91,30 +98,52 @@ async function installPdfNodeGlobals() {
   });
 }
 
-export async function extractResumeText(bytes: Uint8Array, kind: ResumeFileKind) {
-  let text: string;
+export async function extractResumeText(bytes: Uint8Array, kind: ResumeFileKind, fallback?: ResumeTextFallback) {
+  let text = "";
+  let localError: unknown;
   if (kind === "pdf") {
     try {
       await installPdfNodeGlobals();
       const { PDFParse } = await import("pdf-parse");
-      const parser = new PDFParse({ data: bytes });
+      // PDF.js may transfer and detach the supplied ArrayBuffer. Parse a copy
+      // so the original upload remains available for OCR and storage.
+      const parser = new PDFParse({ data: Uint8Array.from(bytes) });
       try {
         text = (await parser.getText()).text;
       } finally {
         await parser.destroy();
       }
     } catch (cause) {
-      throw new Error("We could not read this PDF. Re-export it as a text-based PDF or upload the DOCX version.", { cause });
+      localError = cause;
+    }
+  } else if (kind === "docx") {
+    try {
+      text = await extractDocxText(bytes);
+    } catch (cause) {
+      localError = cause;
     }
   } else {
-    text = await extractDocxText(bytes);
+    localError = new Error("Legacy Word documents require AI-assisted text recognition.");
   }
 
-  const normalized = normalizeExtractedText(text);
+  let normalized = normalizeExtractedText(text);
+  if (!normalized && fallback) {
+    try {
+      normalized = normalizeExtractedText(await fallback(bytes, kind));
+    } catch (cause) {
+      throw new Error(
+        `We could not recognize readable text in this ${kind.toUpperCase()} file. Try another PDF or Word document.`,
+        { cause },
+      );
+    }
+  }
+
+  if (!normalized && localError) {
+    const label = kind === "pdf" ? "PDF" : "Word document";
+    throw new Error(`We could not read this ${label}. Try exporting it again or upload another supported file.`, { cause: localError });
+  }
   if (!normalized) {
-    throw new Error(
-      "No readable text was found. If this resume contains scanned pages or images, export a text-based DOCX or PDF; OCR is not yet supported.",
-    );
+    throw new Error("No readable resume text was found in this file.");
   }
   return normalized.slice(0, MAX_EXTRACTED_CHARACTERS);
 }

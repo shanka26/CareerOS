@@ -5,7 +5,7 @@ CareerOS is an upload-first AI career operating system. It turns user-verified c
 ## MVP capabilities
 
 - Better Auth email/password accounts with optional Google OAuth
-- PDF/DOCX resume ingestion into an approval-gated Career Profile
+- PDF/DOC/DOCX resume ingestion, including scanned-file recognition, into an approval-gated Career Profile
 - Manual verified career facts and profile completeness
 - Pasted-text or hardened public-URL job import and match analysis
 - Verified-fact resume and cover-letter composition with explanations

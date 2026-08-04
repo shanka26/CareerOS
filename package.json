@@ -19,6 +19,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "resume:check-ocr": "node scripts/check-resume-ocr-live.mjs",
     "postinstall": "prisma generate",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
