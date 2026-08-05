@@ -18,7 +18,7 @@ describe("DocumentEditor", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save new version" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("The document version could not be saved.");
+    expect(await screen.findByText("The document version could not be saved.")).toBeVisible();
     await waitFor(() => expect(screen.getByRole("button", { name: "Save new version" })).toBeEnabled());
     expect(refresh).not.toHaveBeenCalled();
   });

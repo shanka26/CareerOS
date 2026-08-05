@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/ui/button";
 import { messageFromError, requestJson } from "@/shared/lib/api-client";
+import { ProcessingIndicator } from "@/shared/ui/processing-indicator";
 
 export function GenerateButtons({ jobId, cover = false }: { jobId: string; cover?: boolean }) {
   const [pending, setPending] = useState(false);
@@ -32,6 +33,7 @@ export function GenerateButtons({ jobId, cover = false }: { jobId: string; cover
       }}>
         {pending ? "Generating..." : cover ? "Compose cover letter" : "Compose verified resume"}
       </Button>
+      {pending ? <div className="mt-3"><ProcessingIndicator compact title={cover ? "Composing your cover letter" : "Composing your resume"} description="CareerOS is applying verified facts and preparing explainable edits." /></div> : null}
       {error ? <p className="mt-2 text-sm text-red-700">{error}</p> : null}
     </div>
   );

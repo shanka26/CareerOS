@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { messageFromError, requestJson } from "@/shared/lib/api-client";
 import { Button } from "@/shared/ui/button";
+import { ProcessingIndicator } from "@/shared/ui/processing-indicator";
 
 export function DocumentEditor({ id, markdown }: { id: string; markdown: string }) {
   const [pending, setPending] = useState(false);
@@ -15,6 +16,7 @@ export function DocumentEditor({ id, markdown }: { id: string; markdown: string 
   return (
     <form
       className="grid gap-4"
+      aria-busy={pending}
       onSubmit={async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -45,6 +47,7 @@ export function DocumentEditor({ id, markdown }: { id: string; markdown: string 
     >
       <textarea name="markdown" defaultValue={markdown} rows={22} className="rounded-2xl border border-[var(--line)] bg-white p-5 font-mono text-sm leading-6" />
       <input name="explanation" placeholder="What did you change?" className="min-h-11 rounded-xl border border-[var(--line)] bg-white px-4" />
+      {pending ? <ProcessingIndicator compact title="Saving your edits" description="CareerOS is creating a new immutable document version." /> : null}
       {message ? <p role="status" className="text-sm font-semibold text-[var(--muted)]">{message}</p> : null}
       <Button type="submit" disabled={pending}>
         {pending ? <LoaderCircle className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
