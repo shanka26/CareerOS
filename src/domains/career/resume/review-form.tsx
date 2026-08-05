@@ -2,31 +2,51 @@
 
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { createContext, useContext, useRef, useState } from "react";
 
 import { Button } from "@/shared/ui/button";
 import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 import type { ResumeAnalysis, StoredResumeAnalysis } from "./analysis-schema";
+import { approveResumeAnalysisSchema } from "./schemas";
+
+type FieldErrors = Record<string, string>;
+const FieldErrorContext = createContext<FieldErrors>({});
 
 export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string; draft: StoredResumeAnalysis }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
   return (
+    <FieldErrorContext.Provider value={fieldErrors}>
     <form
+      ref={formRef}
       className="grid gap-7"
+      noValidate
       onSubmit={async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         setPending(true);
         setError(undefined);
+        setFieldErrors({});
         const value = (name: string) => String(data.get(name) ?? "").trim();
         const nullable = (name: string) => value(name) || null;
         const included = (name: string) => data.get(name) === "on";
         const list = (name: string) => value(name).split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
         const currentValue = (name: string) => value(name) === "true" ? true : value(name) === "false" ? false : null;
+
+        const experienceIndexes = selectedIndexes(draft.experiences.length, (index) => included(`experience.${index}.include`));
+        const achievementIndexes = experienceIndexes.map((experienceIndex) => selectedIndexes(
+          draft.experiences[experienceIndex]!.achievements.length,
+          (achievementIndex) => included(`experience.${experienceIndex}.achievement.${achievementIndex}.include`),
+        ));
+        const skillIndexes = selectedIndexes(draft.skills.length, (index) => included(`skill.${index}.include`));
+        const projectIndexes = selectedIndexes(draft.projects.length, (index) => included(`project.${index}.include`));
+        const educationIndexes = selectedIndexes(draft.education.length, (index) => included(`education.${index}.include`));
+        const certificationIndexes = selectedIndexes(draft.certifications.length, (index) => included(`certification.${index}.include`));
 
         const body = {
           suggestionId,
@@ -37,49 +57,63 @@ export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string
           remotePreference: nullable("remotePreference"),
           careerGoals: list("careerGoals"),
           salaryExpectation: nullable("salaryExpectation"),
-          experiences: draft.experiences.flatMap((experience, index) => included(`experience.${index}.include`) ? [{
+          experiences: experienceIndexes.map((index, selectedIndex) => ({
             company: value(`experience.${index}.company`),
             title: value(`experience.${index}.title`),
             startDate: nullable(`experience.${index}.startDate`),
             endDate: nullable(`experience.${index}.endDate`),
             current: currentValue(`experience.${index}.current`),
             description: value(`experience.${index}.description`),
-            achievements: experience.achievements.flatMap((achievement, achievementIndex) => included(`experience.${index}.achievement.${achievementIndex}.include`) ? [{
+            achievements: (achievementIndexes[selectedIndex] ?? []).map((achievementIndex) => ({
               description: value(`experience.${index}.achievement.${achievementIndex}.description`),
               metric: nullable(`experience.${index}.achievement.${achievementIndex}.metric`),
               quantified: included(`experience.${index}.achievement.${achievementIndex}.quantified`),
-            }] : []),
-          }] : []),
-          skills: draft.skills.flatMap((skill, index) => included(`skill.${index}.include`) ? [{
+            })),
+          })),
+          skills: skillIndexes.map((index) => ({
             name: value(`skill.${index}.name`),
             category: value(`skill.${index}.category`),
             proficiency: nullable(`skill.${index}.proficiency`),
-          }] : []),
-          projects: draft.projects.flatMap((project, index) => included(`project.${index}.include`) ? [{
+          })),
+          projects: projectIndexes.map((index) => ({
             name: value(`project.${index}.name`),
             description: value(`project.${index}.description`),
             impact: nullable(`project.${index}.impact`),
             technologies: list(`project.${index}.technologies`),
-          }] : []),
-          education: draft.education.flatMap((education, index) => included(`education.${index}.include`) ? [{
+          })),
+          education: educationIndexes.map((index) => ({
             school: value(`education.${index}.school`),
             degree: nullable(`education.${index}.degree`),
             field: nullable(`education.${index}.field`),
             graduationDate: nullable(`education.${index}.graduationDate`),
-          }] : []),
-          certifications: draft.certifications.flatMap((certification, index) => included(`certification.${index}.include`) ? [{
+          })),
+          certifications: certificationIndexes.map((index) => ({
             name: value(`certification.${index}.name`),
             issuer: value(`certification.${index}.issuer`),
             issueDate: nullable(`certification.${index}.issueDate`),
             expirationDate: nullable(`certification.${index}.expirationDate`),
-          }] : []),
+          })),
         };
+
+        const parsed = approveResumeAnalysisSchema.safeParse(body);
+        if (!parsed.success) {
+          const indexes = { experienceIndexes, achievementIndexes, skillIndexes, projectIndexes, educationIndexes, certificationIndexes };
+          const nextErrors = Object.fromEntries(parsed.error.issues.map((issue) => {
+            const target = validationTarget(issue.path, indexes);
+            return [target.name, issue.message];
+          }));
+          setFieldErrors(nextErrors);
+          setError(`${Object.keys(nextErrors).length} selected ${Object.keys(nextErrors).length === 1 ? "field needs" : "fields need"} attention. Choose a field below to review it.`);
+          setPending(false);
+          requestAnimationFrame(() => focusField(formRef.current, Object.keys(nextErrors)[0]));
+          return;
+        }
 
         try {
           await requestJson("/api/career/resume/approve", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
+            body: JSON.stringify(parsed.data),
           }, "The profile could not be saved.");
           router.refresh();
         } catch (requestError) {
@@ -133,9 +167,10 @@ export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string
       {draft.additionalFacts.length ? <Section title="Additional resume facts"><div className="grid gap-3">{draft.additionalFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="rounded-xl border border-[var(--line)] bg-white/50 p-4"><p className="font-bold">{fact.label}</p><p className="mt-1 text-sm">{fact.value}</p><Evidence excerpts={fact.evidence} /></div>)}</div></Section> : null}
 
       <details className="rounded-2xl border border-[var(--line)] bg-white/50 p-4"><summary className="cursor-pointer font-bold">Compare everything against extracted resume text</summary><pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap text-xs leading-5 text-[var(--muted)]">{draft.rawText}</pre></details>
-      {error ? <p role="alert" className="text-sm font-semibold text-red-700">{error}</p> : null}
+      {error ? <ValidationSummary message={error} errors={fieldErrors} onFocus={(name) => focusField(formRef.current, name)} /> : null}
       <Button type="submit" disabled={pending}>{pending ? <LoaderCircle className="mr-2 size-4 animate-spin" /> : <CheckCircle2 className="mr-2 size-4" />}Approve selected career facts</Button>
     </form>
+    </FieldErrorContext.Provider>
   );
 }
 
@@ -160,11 +195,94 @@ function Include({ name, label, defaultChecked = true }: { name: string; label: 
 }
 
 function TextField({ label, name, defaultValue = "", evidence }: { label: string; name: string; defaultValue?: string; evidence?: string[] }) {
-  return <label className="grid gap-2 text-sm font-semibold">{label}<input name={name} defaultValue={defaultValue} className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 font-normal outline-none focus:border-[var(--focus)]" />{evidence ? <Evidence excerpts={evidence} /> : null}</label>;
+  const error = useContext(FieldErrorContext)[name];
+  const errorId = `${fieldId(name)}-error`;
+  return <label className="grid gap-2 text-sm font-semibold">{label}<input id={fieldId(name)} name={name} defaultValue={defaultValue} aria-label={label} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className={`min-h-12 rounded-xl border bg-white px-4 font-normal outline-none focus:border-[var(--focus)] ${error ? "border-red-500 ring-2 ring-red-100" : "border-[var(--line)]"}`} />{error ? <span id={errorId} className="text-xs font-semibold text-red-700">{error}</span> : null}{evidence ? <Evidence excerpts={evidence} /> : null}</label>;
 }
 
 function TextArea({ label, name, rows, defaultValue = "", evidence }: { label: string; name: string; rows: number; defaultValue?: string; evidence?: string[] }) {
-  return <label className="grid gap-2 text-sm font-semibold">{label}<textarea name={name} rows={rows} defaultValue={defaultValue} className="rounded-xl border border-[var(--line)] bg-white p-4 font-normal outline-none focus:border-[var(--focus)]" />{evidence ? <Evidence excerpts={evidence} /> : null}</label>;
+  const error = useContext(FieldErrorContext)[name];
+  const errorId = `${fieldId(name)}-error`;
+  return <label className="grid gap-2 text-sm font-semibold">{label}<textarea id={fieldId(name)} name={name} rows={rows} defaultValue={defaultValue} aria-label={label} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className={`rounded-xl border bg-white p-4 font-normal outline-none focus:border-[var(--focus)] ${error ? "border-red-500 ring-2 ring-red-100" : "border-[var(--line)]"}`} />{error ? <span id={errorId} className="text-xs font-semibold text-red-700">{error}</span> : null}{evidence ? <Evidence excerpts={evidence} /> : null}</label>;
+}
+
+function ValidationSummary({ message, errors, onFocus }: { message: string; errors: FieldErrors; onFocus: (name: string) => void }) {
+  const entries = Object.entries(errors);
+  return <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"><p className="font-bold">{message}</p>{entries.length ? <ul className="mt-2 list-disc space-y-1 pl-5">{entries.map(([name, issue]) => <li key={name}><button type="button" onClick={() => onFocus(name)} className="text-left font-semibold underline decoration-red-300 underline-offset-2">{fieldLabel(name)}: {issue}</button></li>)}</ul> : null}</div>;
+}
+
+function selectedIndexes(length: number, included: (index: number) => boolean) {
+  return Array.from({ length }, (_, index) => index).filter(included);
+}
+
+interface ApprovalIndexes {
+  experienceIndexes: number[];
+  achievementIndexes: number[][];
+  skillIndexes: number[];
+  projectIndexes: number[];
+  educationIndexes: number[];
+  certificationIndexes: number[];
+}
+
+function validationTarget(path: PropertyKey[], indexes: ApprovalIndexes) {
+  const [section, selectedIndex, nestedSection, nestedIndex, field] = path;
+  if (section === "experiences" && typeof selectedIndex === "number") {
+    const experienceIndex = indexes.experienceIndexes[selectedIndex] ?? selectedIndex;
+    if (nestedSection === "achievements" && typeof nestedIndex === "number" && typeof field === "string") {
+      const achievementIndex = indexes.achievementIndexes[selectedIndex]?.[nestedIndex] ?? nestedIndex;
+      return { name: `experience.${experienceIndex}.achievement.${achievementIndex}.${field}` };
+    }
+    if (typeof nestedSection === "string") return { name: `experience.${experienceIndex}.${nestedSection}` };
+  }
+
+  const collectionMap: Record<string, { prefix: string; indexes: number[] }> = {
+    skills: { prefix: "skill", indexes: indexes.skillIndexes },
+    projects: { prefix: "project", indexes: indexes.projectIndexes },
+    education: { prefix: "education", indexes: indexes.educationIndexes },
+    certifications: { prefix: "certification", indexes: indexes.certificationIndexes },
+  };
+  if (typeof section === "string" && collectionMap[section] && typeof selectedIndex === "number" && typeof nestedSection === "string") {
+    const collection = collectionMap[section];
+    return { name: `${collection.prefix}.${collection.indexes[selectedIndex] ?? selectedIndex}.${nestedSection}` };
+  }
+  return { name: typeof section === "string" ? section : "headline" };
+}
+
+function focusField(form: HTMLFormElement | null, name?: string) {
+  if (!form || !name) return;
+  const field = form.elements.namedItem(name);
+  if (field instanceof HTMLElement) {
+    field.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    field.focus({ preventScroll: true });
+  }
+}
+
+function fieldId(name: string) {
+  return `resume-field-${name.replace(/[^a-z0-9]+/gi, "-")}`;
+}
+
+function fieldLabel(name: string) {
+  const labels: Record<string, string> = {
+    headline: "Professional headline", summary: "Career summary", targetRole: "Target role",
+    preferredLocations: "Preferred locations", remotePreference: "Work preference",
+    careerGoals: "Career goals", salaryExpectation: "Salary expectations",
+  };
+  if (labels[name]) return labels[name];
+
+  const parts = name.split(".");
+  const fieldNames: Record<string, string> = {
+    company: "Company", title: "Title", startDate: "Start date", endDate: "End date",
+    description: "Description", metric: "Metric", name: "Name", category: "Category",
+    proficiency: "Proficiency", impact: "Impact", technologies: "Technologies", school: "School",
+    degree: "Degree", field: "Field", graduationDate: "Graduation date", issuer: "Issuer",
+    issueDate: "Issue date", expirationDate: "Expiration date",
+  };
+  const sectionNames: Record<string, string> = { experience: "Experience", skill: "Skill", project: "Project", education: "Education", certification: "Certification", achievement: "Achievement" };
+  const section = sectionNames[parts[0] ?? ""] ?? "Career profile";
+  const number = Number(parts[1]);
+  const nestedAchievement = parts[2] === "achievement" ? ` — Achievement ${Number(parts[3]) + 1}` : "";
+  const field = fieldNames[parts.at(-1) ?? ""] ?? "Field";
+  return `${section}${Number.isFinite(number) ? ` ${number + 1}` : ""}${nestedAchievement} — ${field}`;
 }
 
 function Evidence({ excerpts }: { excerpts: string[] }) {

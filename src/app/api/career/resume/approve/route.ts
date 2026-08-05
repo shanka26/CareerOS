@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
   const parsed = approveResumeAnalysisSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Review the highlighted career profile fields.", issues: parsed.error.flatten() }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Some career profile fields need attention.", issues: parsed.error.issues }, { status: 400 });
 
   try {
     await prisma.$transaction(async (tx) => {
