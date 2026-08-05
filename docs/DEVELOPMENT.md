@@ -31,7 +31,9 @@ See [CAREER_PROFILE.md](./CAREER_PROFILE.md) for upload limits, extraction behav
 
 ## Dependency security
 
-Run `npm audit` during dependency upgrades and before release. As of 2026-07-29, the latest stable Next.js 16.2.12 package bundles PostCSS 8.4.31 and Sharp 0.34.5, which npm flags under three high-severity 2026 advisories. Next.js bundles these copies, so package overrides do not replace them safely. CareerOS does not accept user-authored CSS, but this is still a release risk: upgrade to the first patched stable Next.js version and re-run the full suite before production deployment. Remaining development-only audit findings are in the ESLint/glob toolchain and are not shipped with the application.
+Run `npm audit` during dependency upgrades and before release. The Next.js 16.3.0 maintenance upgrade resolved the earlier bundled PostCSS and Sharp advisories, and the release gate now reports zero vulnerabilities. Do not merge future dependency updates until lint, strict types, tests, the production build, and the audit pass together.
+
+See [JOB_SEARCH.md](./JOB_SEARCH.md) for optional provider credentials, attribution requirements, and the external-search adapter contract.
 
 ## Architecture
 

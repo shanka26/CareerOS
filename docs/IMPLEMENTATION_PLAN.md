@@ -10,6 +10,8 @@ Implementation follows, in order: the Master Implementation Charter, Product Req
 
 The charter describes its sequence as milestones 1-12, while the assignment asks to begin with Milestone 0. This plan treats the repository audit, documentation synthesis, decisions, and plan itself as Milestone 0, then retains the charter's twelve milestones without reordering them. The charter's internal "Source of Truth" list begins with the PRD because it does not list itself; no substantive conflict results. Where application status names differ, the PRD's `Technical Interview` and `Final Interview` labels are canonical user-facing labels; database-safe enum names will map to them.
 
+The original vision treated broad browser/job-board integrations as outside the initial MVP. The operator's later explicit request adds aggregated job discovery. CareerOS interprets that request as reviewed API-provider integrations with attribution and optional credentials—not unauthorized scraping—and keeps discovered listings transient until explicit import.
+
 ## Milestone 0: Repository Audit
 
 ### Initial audited state (historical)
@@ -165,6 +167,7 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-08-04: Added aggregated job discovery across configured provider APIs with a normalized adapter contract, bounded parallel requests, partial-failure reporting, deduplication, verified-skill match scoring, profile-derived search suggestions, source/salary filters, sorting, attribution links, and selective import into owned Job Workspaces. Arbeitnow Germany/UK require no keys; Adzuna, USAJOBS, and The Muse remain disabled until registered credentials are configured. Restricted boards are not scraped.
 - 2026-08-04: Completed a post-release maintenance pass. Upgraded Next.js and vulnerable transitive packages until `npm audit` reported zero vulnerabilities; pinned the supported Node 22 runtime; centralized JSON API/network error handling for resume upload, job import, document version saves, and document generation; expanded regression coverage; and refreshed stale implementation-state documentation.
 - 2026-08-04: Applied the operator's clarified upload acceptance requirement over the earlier OCR-not-supported implementation detail. Added AI-assisted, no-store transcription for scanned/no-text PDFs, embedded-image DOCX files, local-parser failures, and legacy DOC files; preserved original PDF bytes across PDF.js buffer transfer; bounded DOCX image expansion; updated disclosure copy; and added a representative parser/storage/request matrix.
 - 2026-08-03: Replaced the conservative headline/skills resume draft with comprehensive OpenAI structured extraction for profile fields, experience, achievements, skills, projects, education, certifications, additional facts, and a durable resume report. Every populated item cites exact locally verified source excerpts; prompt injection is treated as resume content, missing values remain blank, users can edit/exclude every record, approved facts feed later immutable generation snapshots, and accepted reports remain viewable.

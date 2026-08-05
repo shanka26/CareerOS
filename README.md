@@ -8,6 +8,7 @@ CareerOS is an upload-first AI career operating system. It turns user-verified c
 - PDF/DOC/DOCX resume ingestion, including scanned-file recognition, into an approval-gated Career Profile
 - Manual verified career facts and profile completeness
 - Pasted-text or hardened public-URL job import and match analysis
+- Aggregated, attributed job search with profile-derived keywords, source filters, sorting, and selective import
 - Verified-fact resume and cover-letter composition with explanations
 - Immutable document versions, provenance, editing, and PDF export
 - Exact-version application CRM and pipeline history
@@ -38,6 +39,7 @@ After configuring Supabase and applying migrations, `npm run db:check` verifies 
 - [Database and migrations](./docs/DATABASE.md)
 - [Authentication](./docs/AUTHENTICATION.md)
 - [Career Profile ingestion](./docs/CAREER_PROFILE.md)
+- [Aggregated job search](./docs/JOB_SEARCH.md)
 - [Deployment](./docs/DEPLOYMENT.md)
 - [Security](./docs/SECURITY.md)
 
