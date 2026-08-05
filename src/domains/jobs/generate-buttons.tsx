@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 export function GenerateButtons({ jobId, cover = false }: { jobId: string; cover?: boolean }) {
   const [pending, setPending] = useState(false);
@@ -15,11 +16,17 @@ export function GenerateButtons({ jobId, cover = false }: { jobId: string; cover
         setPending(true);
         setError(undefined);
         const kind = cover ? "cover-letter" : "resume";
-        const response = await fetch(`/api/jobs/${jobId}/generate-${kind}`, { method: "POST" });
-        const result = (await response.json()) as { documentId?: string; error?: string };
-        if (response.ok && result.documentId) router.push(`/dashboard/documents/${result.documentId}`);
-        else {
-          setError(result.error ?? "Document generation failed.");
+        try {
+          const result = await requestJson<{ documentId?: string }>(
+            `/api/jobs/${jobId}/generate-${kind}`,
+            { method: "POST" },
+            "Document generation failed.",
+          );
+          if (!result.documentId) throw new Error("Document generation returned an incomplete response.");
+          router.push(`/dashboard/documents/${result.documentId}`);
+        } catch (requestError) {
+          setError(messageFromError(requestError, "Document generation failed."));
+        } finally {
           setPending(false);
         }
       }}>

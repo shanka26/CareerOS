@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 import type { ResumeAnalysis, StoredResumeAnalysis } from "./analysis-schema";
 
@@ -74,18 +75,18 @@ export function ResumeReviewForm({ suggestionId, draft }: { suggestionId: string
           }] : []),
         };
 
-        const response = await fetch("/api/career/resume/approve", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const result = (await response.json()) as { error?: string };
-        if (!response.ok) {
-          setError(result.error ?? "The profile could not be saved.");
+        try {
+          await requestJson("/api/career/resume/approve", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+          }, "The profile could not be saved.");
+          router.refresh();
+        } catch (requestError) {
+          setError(messageFromError(requestError, "The profile could not be saved."));
+        } finally {
           setPending(false);
-          return;
         }
-        router.refresh();
       }}
     >
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Review required.</strong> AI filled only values supported by the resume. Edit any value, uncheck any item you do not want, and approve when it is accurate.</div>

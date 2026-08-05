@@ -1,8 +1,8 @@
 # CareerOS Implementation Plan
 
-**Status:** MVP foundation implemented; audit gaps and production release gates remain
-**Branch:** `build/careeros-mvp`  
-**Last updated:** 2026-07-29
+**Status:** MVP deployed to production; iterative hardening and full authenticated acceptance testing continue
+**Branch:** `main`
+**Last updated:** 2026-08-04
 
 ## Authoritative Sources and Interpretation
 
@@ -12,9 +12,9 @@ The charter describes its sequence as milestones 1-12, while the assignment asks
 
 ## Milestone 0: Repository Audit
 
-### Current state
+### Initial audited state (historical)
 
-The default branch contains only five Markdown files: the README and the four authoritative documents. There is no application code, package manifest, dependency lockfile, environment example, database configuration, migrations, tests, CI/CD, deployment configuration, or placeholder implementation. The repository is therefore documentation-only, not partially implemented.
+At the initial audit, the default branch contained only five Markdown files: the README and the four authoritative documents. There was no application code, package manifest, dependency lockfile, environment example, database configuration, migrations, tests, CI/CD, or deployment configuration. The progress log below records the subsequent implementation and production rollout.
 
 ### Product summary
 
@@ -165,6 +165,7 @@ The MVP is done only when a new user can complete the fourteen-step journey in t
 
 ## Progress Log
 
+- 2026-08-04: Completed a post-release maintenance pass. Upgraded Next.js and vulnerable transitive packages until `npm audit` reported zero vulnerabilities; pinned the supported Node 22 runtime; centralized JSON API/network error handling for resume upload, job import, document version saves, and document generation; expanded regression coverage; and refreshed stale implementation-state documentation.
 - 2026-08-04: Applied the operator's clarified upload acceptance requirement over the earlier OCR-not-supported implementation detail. Added AI-assisted, no-store transcription for scanned/no-text PDFs, embedded-image DOCX files, local-parser failures, and legacy DOC files; preserved original PDF bytes across PDF.js buffer transfer; bounded DOCX image expansion; updated disclosure copy; and added a representative parser/storage/request matrix.
 - 2026-08-03: Replaced the conservative headline/skills resume draft with comprehensive OpenAI structured extraction for profile fields, experience, achievements, skills, projects, education, certifications, additional facts, and a durable resume report. Every populated item cites exact locally verified source excerpts; prompt injection is treated as resume content, missing values remain blank, users can edit/exclude every record, approved facts feed later immutable generation snapshots, and accepted reports remain viewable.
 - 2026-08-03: Connected a private Production-only Vercel Blob store and routed production resume uploads through it using pseudonymous randomized keys, content types, fail-closed configuration, and orphan cleanup. Local development continues to use `.data/uploads`. Added adapter tests and documented that malware scanning, retention/lifecycle, and source-file deletion remain hardening work.

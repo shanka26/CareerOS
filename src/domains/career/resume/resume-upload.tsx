@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 export function ResumeUpload() {
   const [file, setFile] = useState<File>();
@@ -22,14 +23,14 @@ export function ResumeUpload() {
         setError(undefined);
         const formData = new FormData();
         formData.set("resume", file);
-        const response = await fetch("/api/career/resume", { method: "POST", body: formData });
-        const result = (await response.json()) as { error?: string };
-        if (!response.ok) {
-          setError(result.error ?? "The resume could not be processed.");
+        try {
+          await requestJson("/api/career/resume", { method: "POST", body: formData }, "The resume could not be processed.");
+          router.refresh();
+        } catch (requestError) {
+          setError(messageFromError(requestError, "The resume could not be processed."));
+        } finally {
           setPending(false);
-          return;
         }
-        router.refresh();
       }}
     >
       <label className="grid min-h-56 cursor-pointer place-items-center rounded-3xl border-2 border-dashed border-[var(--line)] bg-white/40 p-8 text-center transition hover:border-[var(--focus)]">

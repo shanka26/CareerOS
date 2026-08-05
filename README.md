@@ -41,4 +41,4 @@ After configuring Supabase and applying migrations, `npm run db:check` verifies 
 - [Deployment](./docs/DEPLOYMENT.md)
 - [Security](./docs/SECURITY.md)
 
-The authoritative product documents remain in the repository root. See the implementation plan for milestone status, external-test limitations, and the known upstream dependency advisory.
+The authoritative product documents remain in the repository root. See the implementation plan for milestone status and external-test limitations. The committed `.node-version` matches the supported Node.js runtime.
