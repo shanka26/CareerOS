@@ -8,6 +8,6 @@ Resume analysis sends bounded extracted text to the configured OpenAI API using 
 
 Baseline response headers disable framing, MIME sniffing, camera/microphone/geolocation, and cross-origin opener sharing. Secrets belong only in the deployment secret manager. Logs must exclude resume text, personal prompts, credentials, and document bodies.
 
-## Known release risk
+Aggregated job search calls only fixed, reviewed HTTPS provider hosts through server-only adapters. Provider credentials never reach the browser. Requests have encoded parameters, bounded response sizes, schema validation, parallel timeouts, explicit attribution, and partial-failure isolation. Search results remain transient until the authenticated user explicitly imports one. Provider terms must be reviewed before activation; restricted job boards are not scraped.
 
-As of 2026-07-29, npm reports high-severity advisories in dependencies bundled by the latest stable Next.js 16.2.12 and development tooling. There is no safe stable Next.js upgrade currently available in this repository's tested line. Do not approve production release until a patched stable version is available, upgraded, audited, and the full gate passes. See `docs/DEVELOPMENT.md` for detail.
+The dependency advisory recorded during the initial implementation was resolved by the tested Next.js 16.3.0 upgrade. Release checks continue to require a zero-high-severity `npm audit` result.

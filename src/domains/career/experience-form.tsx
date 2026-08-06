@@ -4,6 +4,7 @@ import { LoaderCircle, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 interface ExperienceValues { id: string; company: string; title: string; startDate: string; endDate: string; current: boolean; description: string }
 
@@ -20,10 +21,15 @@ export function ExperienceForm({ experience }: { experience?: ExperienceValues }
     const data = new FormData(form);
     setPending(true);
     setError(undefined);
-    const response = await fetch("/api/career/experiences", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: experience?.id, company: data.get("company"), title: data.get("title"), startDate: data.get("startDate"), endDate: data.get("endDate"), current: data.get("current") === "on", description: data.get("description") }) });
-    const result = (await response.json()) as { error?: string };
-    if (!response.ok) { setError(result.error ?? "Experience could not be saved."); setPending(false); return; }
-    setOpen(false); setPending(false); router.refresh();
+    try {
+      await requestJson("/api/career/experiences", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: experience?.id, company: data.get("company"), title: data.get("title"), startDate: data.get("startDate"), endDate: data.get("endDate"), current: data.get("current") === "on", description: data.get("description") }) }, "Experience could not be saved.");
+      setOpen(false);
+      router.refresh();
+    } catch (requestError) {
+      setError(messageFromError(requestError, "Experience could not be saved."));
+    } finally {
+      setPending(false);
+    }
   }}>
     <div className="grid gap-4 sm:grid-cols-2"><Input name="company" label="Company" defaultValue={experience?.company} /><Input name="title" label="Title" defaultValue={experience?.title} /><Input name="startDate" label="Start date" type="date" defaultValue={experience?.startDate} /><Input name="endDate" label="End date" type="date" defaultValue={experience?.endDate} /></div>
     <label className="flex items-center gap-2 text-sm font-semibold"><input name="current" type="checkbox" defaultChecked={experience?.current} />I currently work here</label>

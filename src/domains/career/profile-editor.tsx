@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 interface ProfileValues {
   headline: string;
@@ -26,11 +27,15 @@ export function ProfileEditor({ profile }: { profile: ProfileValues }) {
       const data = new FormData(event.currentTarget);
       setPending(true);
       setMessage(undefined);
-      const response = await fetch("/api/career/profile", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ headline: data.get("headline"), summary: data.get("summary"), targetRole: data.get("targetRole"), preferredLocations: String(data.get("preferredLocations") ?? "").split(",").map((v) => v.trim()).filter(Boolean), remotePreference: data.get("remotePreference") || null, careerGoals: String(data.get("careerGoals") ?? "").split("\n").map((v) => v.trim()).filter(Boolean) }) });
-      const result = (await response.json()) as { error?: string };
-      setPending(false);
-      setMessage(response.ok ? "Profile saved." : result.error ?? "Profile could not be saved.");
-      if (response.ok) router.refresh();
+      try {
+        await requestJson("/api/career/profile", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ headline: data.get("headline"), summary: data.get("summary"), targetRole: data.get("targetRole"), preferredLocations: String(data.get("preferredLocations") ?? "").split(",").map((v) => v.trim()).filter(Boolean), remotePreference: data.get("remotePreference") || null, careerGoals: String(data.get("careerGoals") ?? "").split("\n").map((v) => v.trim()).filter(Boolean) }) }, "Profile could not be saved.");
+        setMessage("Profile saved.");
+        router.refresh();
+      } catch (requestError) {
+        setMessage(messageFromError(requestError, "Profile could not be saved."));
+      } finally {
+        setPending(false);
+      }
     }}>
       <Input label="Headline" name="headline" defaultValue={profile.headline} /><Input label="Target role" name="targetRole" defaultValue={profile.targetRole} />
       <label className="grid gap-2 text-sm font-semibold">Summary<textarea name="summary" defaultValue={profile.summary} rows={5} className="rounded-xl border border-[var(--line)] bg-white p-4 font-normal" /></label>

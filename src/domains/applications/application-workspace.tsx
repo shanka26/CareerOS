@@ -6,6 +6,7 @@ import { useState } from "react";
 import { applicationStatuses, applicationStatusLabel, type ApplicationStatusValue } from "./status";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 type Choice = { id: string; label: string; documentId: string; versionId: string };
 type ApplicationCard = {
@@ -44,36 +45,38 @@ export function ApplicationWorkspace({
     }
     setPending(true);
     setError(undefined);
-    const response = await fetch("/api/applications", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        jobId,
-        resumeDocumentId: resume.documentId,
-        resumeVersionId: resume.versionId,
-        coverLetterDocumentId: coverLetter.documentId,
-        coverLetterVersionId: coverLetter.versionId,
-      }),
-    });
-    const result = (await response.json()) as { error?: string };
-    if (response.ok) {
+    try {
+      await requestJson("/api/applications", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          resumeDocumentId: resume.documentId,
+          resumeVersionId: resume.versionId,
+          coverLetterDocumentId: coverLetter.documentId,
+          coverLetterVersionId: coverLetter.versionId,
+        }),
+      }, "Application creation failed.");
       router.refresh();
-      setPending(false);
-    } else {
-      setError(result.error ?? "Application creation failed.");
+    } catch (requestError) {
+      setError(messageFromError(requestError, "Application creation failed."));
+    } finally {
       setPending(false);
     }
   }
 
   async function moveApplication(id: string, status: ApplicationStatusValue) {
-    const response = await fetch(`/api/applications/${id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    const result = (await response.json()) as { error?: string };
-    if (response.ok) router.refresh();
-    else setError(result.error ?? "Status update failed.");
+    setError(undefined);
+    try {
+      await requestJson(`/api/applications/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      }, "Status update failed.");
+      router.refresh();
+    } catch (requestError) {
+      setError(messageFromError(requestError, "Status update failed."));
+    }
   }
 
   return (

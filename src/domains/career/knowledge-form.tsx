@@ -4,6 +4,7 @@ import { LoaderCircle, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { messageFromError, requestJson } from "@/shared/lib/api-client";
 
 type KnowledgeKind = "skill" | "achievement" | "project" | "education" | "certification";
 type InitialValues = Record<string, string | string[] | undefined> & { id?: string };
@@ -22,11 +23,15 @@ export function KnowledgeForm({ kind, initial }: { kind: KnowledgeKind; initial?
     setPending(true);
     setError(undefined);
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch("/api/career/knowledge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...values, kind, id: initial?.id, quantified: kind === "achievement" ? values.quantified === "on" : undefined, technologies: kind === "project" ? String(values.technologies ?? "").split(",").map((value) => value.trim()).filter(Boolean) : undefined }) });
-    const result = (await response.json()) as { error?: string };
-    if (response.ok) { setOpen(false); router.refresh(); }
-    else setError(result.error ?? "Career knowledge could not be saved.");
-    setPending(false);
+    try {
+      await requestJson("/api/career/knowledge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...values, kind, id: initial?.id, quantified: kind === "achievement" ? values.quantified === "on" : undefined, technologies: kind === "project" ? String(values.technologies ?? "").split(",").map((value) => value.trim()).filter(Boolean) : undefined }) }, "Career knowledge could not be saved.");
+      setOpen(false);
+      router.refresh();
+    } catch (requestError) {
+      setError(messageFromError(requestError, "Career knowledge could not be saved."));
+    } finally {
+      setPending(false);
+    }
   }}>
     {kind === "skill" ? <><Field name="name" label="Skill" value={initial?.name} required /><Field name="category" label="Category" value={initial?.category ?? "User"} required /><Field name="proficiency" label="Proficiency" value={initial?.proficiency} /></> : null}
     {kind === "achievement" ? <><input type="hidden" name="experienceId" value={typeof initial?.experienceId === "string" ? initial.experienceId : ""} /><Area name="description" label="Achievement" value={initial?.description} required /><Field name="metric" label="Metric or outcome" value={initial?.metric} /><label className="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="quantified" defaultChecked={initial?.quantified === "true"} />Includes a verified quantity</label></> : null}

@@ -1,9 +1,63 @@
 import { z } from "zod";
 
 const optionalText = z.string().trim().max(2_000).optional();
+
+const monthNumbers = new Map([
+  ["jan", "01"], ["january", "01"], ["feb", "02"], ["february", "02"],
+  ["mar", "03"], ["march", "03"], ["apr", "04"], ["april", "04"],
+  ["may", "05"], ["jun", "06"], ["june", "06"], ["jul", "07"], ["july", "07"],
+  ["aug", "08"], ["august", "08"], ["sep", "09"], ["sept", "09"], ["september", "09"],
+  ["oct", "10"], ["october", "10"], ["nov", "11"], ["november", "11"],
+  ["dec", "12"], ["december", "12"],
+]);
+
+export function normalizeResumeDate(value: unknown) {
+  if (value == null || value === "") return null;
+  if (typeof value !== "string") return value;
+
+  const input = value.trim();
+  if (!input) return null;
+  if (/^\d{4}$/.test(input)) return input;
+
+  const yearMonth = input.match(/^(\d{4})[-/](\d{1,2})$/);
+  if (yearMonth) {
+    const month = Number(yearMonth[2]);
+    return month >= 1 && month <= 12 ? `${yearMonth[1]}-${String(month).padStart(2, "0")}` : input;
+  }
+
+  const monthYear = input.match(/^(\d{1,2})[/-](\d{4})$/);
+  if (monthYear) {
+    const month = Number(monthYear[1]);
+    return month >= 1 && month <= 12 ? `${monthYear[2]}-${String(month).padStart(2, "0")}` : input;
+  }
+
+  const namedMonth = input.match(/^([a-z]+)\.?\s+(\d{4})$/i);
+  if (namedMonth) {
+    const month = monthNumbers.get(namedMonth[1]!.toLowerCase());
+    if (month) return `${namedMonth[2]}-${month}`;
+  }
+
+  const fullDate = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (fullDate) {
+    const date = new Date(`${input}T00:00:00.000Z`);
+    if (!Number.isNaN(date.getTime()) && date.toISOString().startsWith(input)) return input;
+  }
+
+  return input;
+}
+
+function isSupportedResumeDate(value: string) {
+  if (/^\d{4}$/.test(value)) return true;
+  const yearMonth = value.match(/^\d{4}-(\d{2})$/);
+  if (yearMonth) return Number(yearMonth[1]) >= 1 && Number(yearMonth[1]) <= 12;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
 const nullableDateText = z.preprocess(
-  (value) => value === "" || value == null ? null : value,
-  z.string().regex(/^\d{4}(?:-\d{2})?(?:-\d{2})?$/).nullable(),
+  normalizeResumeDate,
+  z.string().refine(isSupportedResumeDate, "Enter a year or month and year, such as 2020 or Jul 2020.").nullable(),
 );
 
 export const approveResumeDraftSchema = z.object({

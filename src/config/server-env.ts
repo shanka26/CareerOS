@@ -14,6 +14,12 @@ const serverEnvSchema = z
     GOOGLE_CLIENT_SECRET: optionalCredential,
     OPENAI_API_KEY: optionalCredential,
     OPENAI_MODEL: z.string().trim().min(1).default("gpt-5.6-terra"),
+    ADZUNA_APP_ID: optionalCredential,
+    ADZUNA_APP_KEY: optionalCredential,
+    ADZUNA_COUNTRY: z.string().trim().regex(/^[a-z]{2}$/i).default("us"),
+    USAJOBS_API_KEY: optionalCredential,
+    USAJOBS_USER_AGENT: z.email().optional(),
+    THE_MUSE_API_KEY: optionalCredential,
     VERCEL: optionalCredential,
     VERCEL_URL: optionalCredential,
     VERCEL_BRANCH_URL: optionalCredential,
@@ -24,6 +30,12 @@ const serverEnvSchema = z
   .superRefine((value, context) => {
     if (Boolean(value.GOOGLE_CLIENT_ID) !== Boolean(value.GOOGLE_CLIENT_SECRET)) {
       context.addIssue({ code: "custom", path: ["GOOGLE_CLIENT_ID"], message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be configured together." });
+    }
+    if (Boolean(value.ADZUNA_APP_ID) !== Boolean(value.ADZUNA_APP_KEY)) {
+      context.addIssue({ code: "custom", path: ["ADZUNA_APP_ID"], message: "ADZUNA_APP_ID and ADZUNA_APP_KEY must be configured together." });
+    }
+    if (Boolean(value.USAJOBS_API_KEY) !== Boolean(value.USAJOBS_USER_AGENT)) {
+      context.addIssue({ code: "custom", path: ["USAJOBS_API_KEY"], message: "USAJOBS_API_KEY and USAJOBS_USER_AGENT must be configured together." });
     }
   });
 
