@@ -2,10 +2,16 @@ import type { JobSearchQuery, JobSearchResult } from "./types";
 
 const maxResponseBytes = 2_000_000;
 
-export async function fetchProviderJson(url: URL, signal: AbortSignal, headers?: HeadersInit) {
+export async function fetchProviderJson(
+  url: URL,
+  signal: AbortSignal,
+  headers?: HeadersInit,
+  revalidateSeconds?: number,
+) {
   const response = await fetch(url, {
-    cache: "no-store",
+    cache: revalidateSeconds ? "force-cache" : "no-store",
     headers: { accept: "application/json", "user-agent": "CareerOS Job Search/1.0", ...headers },
+    ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds } } : {}),
     signal,
   });
   if (!response.ok) throw new Error(`Provider returned HTTP ${response.status}.`);
@@ -32,7 +38,9 @@ export function plainText(value: string) {
 export function matchesQuery(result: JobSearchResult, query: JobSearchQuery) {
   const terms = query.q.toLowerCase().split(/\s+/).filter(Boolean);
   const haystack = `${result.title} ${result.company} ${result.description}`.toLowerCase();
-  if (!terms.every((term) => haystack.includes(term))) return false;
+  const matchedTerms = terms.filter((term) => haystack.includes(term)).length;
+  const requiredTerms = Math.max(1, Math.ceil(Math.min(terms.length, 4) / 2));
+  if (matchedTerms < requiredTerms) return false;
   if (query.location && !`${result.location} ${result.description}`.toLowerCase().includes(query.location.toLowerCase())) return false;
   if (query.remote === "remote" && !result.remote) return false;
   if (query.remote === "onsite" && result.remote) return false;

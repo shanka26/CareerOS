@@ -4,6 +4,9 @@ import { ArrowUpRight, BookmarkPlus, Search, SlidersHorizontal } from "lucide-re
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { CommonJobBoards } from "./common-job-boards";
+import { JobSearchAssistant } from "./job-search-assistant";
+import { diversifyResults } from "./search/diversify";
 import type { JobSearchProviderStatus, JobSearchResult, JobSearchSuggestions } from "./search/types";
 import { messageFromError, requestJson } from "@/shared/lib/api-client";
 import { Button } from "@/shared/ui/button";
@@ -31,22 +34,27 @@ export function JobSearch({ initialSuggestions }: { initialSuggestions: JobSearc
 
   const displayedResults = useMemo(() => {
     const filtered = results.filter((job) => (source === "all" || job.source === source) && (!salaryOnly || job.salaryMin != null || job.salaryMax != null));
-    return [...filtered].sort((a, b) => {
+    const ordered = [...filtered].sort((a, b) => {
       if (sort === "newest") return (b.postedAt ?? "").localeCompare(a.postedAt ?? "");
       if (sort === "salary") return (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0);
       if (sort === "title") return a.title.localeCompare(b.title);
       return b.matchScore - a.matchScore;
     });
+    return sort === "match" && source === "all" ? diversifyResults(ordered) : ordered;
   }, [results, salaryOnly, sort, source]);
 
-  async function runSearch(term = query) {
+  async function runSearch(term = query, overrides?: { location: string; remote: typeof remote }) {
     const normalized = term.trim();
     if (normalized.length < 2) return setError("Enter at least two characters to search jobs.");
+    const nextLocation = overrides?.location ?? location;
+    const nextRemote = overrides?.remote ?? remote;
     setQuery(normalized);
+    setLocation(nextLocation);
+    setRemote(nextRemote);
     setPending(true);
     setError(undefined);
     try {
-      const params = new URLSearchParams({ q: normalized, location: location.trim(), remote });
+      const params = new URLSearchParams({ q: normalized, location: nextLocation.trim(), remote: nextRemote });
       const response = await requestJson<SearchResponse>(`/api/jobs/search?${params}`, { method: "GET" }, "Job search failed.");
       setResults(response.results);
       setProviders(response.providers);
@@ -90,6 +98,11 @@ export function JobSearch({ initialSuggestions }: { initialSuggestions: JobSearc
         <p className="max-w-xl text-sm text-[var(--muted)]">CareerOS combines live provider results, removes obvious duplicates, and scores matches using only your verified skills.</p>
       </div>
 
+      <JobSearchAssistant
+        currentSearch={{ query, location, remote }}
+        onApply={(search) => void runSearch(search.query, { location: search.location, remote: search.remote })}
+      />
+
       <form className="mt-6 grid gap-3 lg:grid-cols-[1fr_.55fr_auto_auto]" aria-busy={pending} onSubmit={(event) => { event.preventDefault(); void runSearch(); }}>
         <label className="grid gap-1 text-xs font-bold">Role, skill, or keyword<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Platform engineer TypeScript" className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-normal" /></label>
         <label className="grid gap-1 text-xs font-bold">Location<input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Chicago or United States" className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-normal" /></label>
@@ -102,6 +115,8 @@ export function JobSearch({ initialSuggestions }: { initialSuggestions: JobSearc
       {error ? <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p> : null}
 
       {providers.length ? <div className="mt-5 flex flex-wrap gap-2" aria-label="Job source status">{providers.map((provider) => <span key={provider.id} title={provider.message} className={`rounded-full border px-3 py-1 text-xs font-bold ${provider.status === "ok" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : provider.status === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-[var(--line)] bg-white/60 text-[var(--muted)]"}`}>{provider.label}: {provider.status === "ok" ? provider.resultCount : provider.status}</span>)}</div> : null}
+
+      {searched ? <CommonJobBoards query={query} location={location} remote={remote} /> : null}
 
       {searched ? <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-y border-[var(--line)] py-4"><p className="font-bold">{displayedResults.length} of {results.length} listings</p><div className="flex flex-wrap gap-3"><FilterSelect label="Source" value={source} onChange={setSource} options={[{ value: "all", label: "All sources" }, ...providers.filter(({ status, resultCount }) => status === "ok" && resultCount > 0).map(({ id, label }) => ({ value: id, label }))]} /><FilterSelect label="Sort" value={sort} onChange={(value) => setSort(value as SortOption)} options={[{ value: "match", label: "Best match" }, { value: "newest", label: "Newest" }, { value: "salary", label: "Highest salary" }, { value: "title", label: "Title A-Z" }]} /><label className="flex min-h-10 items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 text-xs font-bold"><SlidersHorizontal className="size-3" /><input type="checkbox" checked={salaryOnly} onChange={(event) => setSalaryOnly(event.target.checked)} />Salary listed</label></div></div> : null}
 

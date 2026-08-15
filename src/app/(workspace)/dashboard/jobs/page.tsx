@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { JobImportForm } from "@/domains/jobs/job-import-form";
 import { JobSearch } from "@/domains/jobs/job-search";
-import { JobsTabs, type JobsTab } from "@/domains/jobs/jobs-tabs";
+import { getJobsTab, JobsTabs } from "@/domains/jobs/jobs-tabs";
 import { buildJobSearchSuggestions } from "@/domains/jobs/search/suggestions";
 import { requireSession } from "@/domains/settings/auth/session";
 import { prisma } from "@/shared/db/prisma";
@@ -15,13 +15,13 @@ interface JobsPageProps {
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const session = await requireSession();
   const params = await searchParams;
-  const activeTab: JobsTab = params.tab === "find-job" ? "find-job" : "my-jobs";
+  const activeTab = getJobsTab(params.tab);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
       <h1 className="font-[family-name:var(--font-display)] text-5xl">Jobs</h1>
       <p className="mt-3 max-w-3xl text-[var(--muted)]">
-        Keep your private job workspaces separate from live job discovery.
+        Search live listings, then save the opportunities you want to analyze and tailor for.
       </p>
       <JobsTabs activeTab={activeTab} />
       {activeTab === "find-job"
@@ -90,7 +90,7 @@ async function MyJobsPanel({ userId }: { userId: string }) {
               </Link>
             )) : (
               <Card className="p-6 text-sm text-[var(--muted)]">
-                No personal job workspaces yet. Use Find Job to discover a listing, or add one manually.
+                No personal job workspaces yet. Use Search Jobs to discover a listing, or add one manually.
               </Card>
             )}
           </div>

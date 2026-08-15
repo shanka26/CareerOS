@@ -1,4 +1,4 @@
-export const aiCapabilities = ["analyze-resume", "analyze-job", "generate-resume", "generate-cover-letter", "research-company", "calculate-match", "update-career-knowledge", "generate-interview-prep"] as const;
+export const aiCapabilities = ["analyze-resume", "analyze-job", "generate-resume", "generate-cover-letter", "generate-job-search", "research-company", "calculate-match", "update-career-knowledge", "generate-interview-prep"] as const;
 export type AICapability = (typeof aiCapabilities)[number];
 
 export const promptVersions: Record<AICapability, string> = Object.fromEntries(

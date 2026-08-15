@@ -34,4 +34,21 @@ describe("aggregateJobSearch", () => {
     });
     expect(response.providers[0]).toMatchObject({ status: "unavailable", message: "Configure credentials." });
   });
+
+  it("surfaces multiple successful sources near the top of ranked results", async () => {
+    const response = await aggregateJobSearch({
+      query: { q: "engineer", location: "", remote: "any" }, verifiedSkills: [],
+      providers: [
+        provider({ id: "arbeitnow", label: "Arbeitnow", search: async () => [
+          { ...result, id: "a1", source: "arbeitnow", matchScore: 0 },
+          { ...result, id: "a2", source: "arbeitnow", title: "Engineer Two", url: "https://example.com/a2", matchScore: 0 },
+        ] }),
+        provider({ id: "remoteok", label: "Remote OK", search: async () => [
+          { ...result, id: "r1", source: "remoteok", company: "Other", url: "https://example.com/r1", matchScore: 0 },
+        ] }),
+      ],
+    });
+
+    expect(response.results.slice(0, 2).map(({ source }) => source)).toEqual(["arbeitnow", "remoteok"]);
+  });
 });
