@@ -1,4 +1,5 @@
 import { scoreResult } from "./shared";
+import { diversifyResults } from "./diversify";
 import type { JobSearchProvider, JobSearchProviderStatus, JobSearchQuery, JobSearchResult } from "./types";
 
 function dedupeKey(job: JobSearchResult) {
@@ -42,8 +43,9 @@ export async function aggregateJobSearch({
     if (!existing || scored.matchScore > existing.matchScore) unique.set(key, scored);
   }
 
+  const ranked = [...unique.values()].sort((a, b) => b.matchScore - a.matchScore || (b.postedAt ?? "").localeCompare(a.postedAt ?? ""));
   return {
-    results: [...unique.values()].sort((a, b) => b.matchScore - a.matchScore || (b.postedAt ?? "").localeCompare(a.postedAt ?? "")),
+    results: diversifyResults(ranked),
     providers: statuses.sort((a, b) => a.label.localeCompare(b.label)),
   };
 }

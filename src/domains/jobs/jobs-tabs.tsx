@@ -2,9 +2,13 @@ import Link from "next/link";
 
 export type JobsTab = "my-jobs" | "find-job";
 
+export function getJobsTab(tab: string | string[] | undefined): JobsTab {
+  return tab === "my-jobs" ? "my-jobs" : "find-job";
+}
+
 const tabs: Array<{ id: JobsTab; label: string; href: string }> = [
-  { id: "my-jobs", label: "My Jobs", href: "/dashboard/jobs" },
-  { id: "find-job", label: "Find Job", href: "/dashboard/jobs?tab=find-job" },
+  { id: "find-job", label: "Search Jobs", href: "/dashboard/jobs" },
+  { id: "my-jobs", label: "My Jobs", href: "/dashboard/jobs?tab=my-jobs" },
 ];
 
 export function JobsTabs({ activeTab }: { activeTab: JobsTab }) {

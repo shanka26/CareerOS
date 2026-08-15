@@ -32,6 +32,8 @@ describe("JobSearch", () => {
     expect(await screen.findByText("Backend Engineer")).toBeVisible();
     expect(screen.getByText("Platform Engineer", { selector: "h3" })).toBeVisible();
     expect(screen.getByText("Source One: 1")).toBeVisible();
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("href", expect.stringContaining("keywords=Platform+Engineer"));
+    expect(screen.getByRole("link", { name: "Indeed" })).toHaveAttribute("target", "_blank");
 
     fireEvent.change(screen.getByLabelText("Source"), { target: { value: "two" } });
     await waitFor(() => expect(screen.queryByText("Platform Engineer", { selector: "h3" })).not.toBeInTheDocument());

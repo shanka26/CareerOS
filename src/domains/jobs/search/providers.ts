@@ -24,19 +24,82 @@ const arbeitnowSchema = z.object({
   }).passthrough()).catch([]),
 }).passthrough();
 
+const jobicySchema = z.object({
+  jobs: z.array(z.object({
+    id: z.union([z.string(), z.number()]), url: z.url(), jobTitle: z.string(), companyName: z.string(),
+    jobGeo: z.string().catch("Remote"), jobDescription: z.string().catch(""), pubDate: z.string().optional(),
+    jobType: z.union([z.string(), z.array(z.string())]).optional(), salaryMin: z.coerce.number().optional(),
+    salaryMax: z.coerce.number().optional(), salaryCurrency: z.string().optional(),
+  }).passthrough()).catch([]),
+}).passthrough();
+
+const remoteOkJobSchema = z.object({
+  id: z.union([z.string(), z.number()]), position: z.string(), company: z.string(),
+  description: z.string().catch(""), location: z.string().catch("Remote"), url: z.url(),
+  epoch: z.coerce.number().optional(), date: z.string().optional(), tags: z.array(z.string()).catch([]),
+  salary_min: z.coerce.number().catch(0), salary_max: z.coerce.number().catch(0),
+}).passthrough();
+
+function remoteOkProvider(): JobSearchProvider {
+  return {
+    id: "remoteok", label: "Remote OK", enabled: true,
+    async search(query, signal) {
+      const payload = z.array(z.unknown()).parse(await fetchProviderJson(new URL("https://remoteok.com/api"), signal, undefined, 3_600));
+      return payload.flatMap((item) => {
+        const parsed = remoteOkJobSchema.safeParse(item);
+        if (!parsed.success) return [];
+        const job = parsed.data;
+        const employmentType = job.tags.find((tag) => /^(full[ -]?time|part[ -]?time|contract|internship?)$/i.test(tag)) ?? null;
+        return [{
+          id: `remoteok:${job.id}`, source: "remoteok", sourceLabel: "Remote OK", title: plainText(job.position),
+          company: plainText(job.company), location: job.location.trim() || "Remote", remote: true,
+          description: plainText(job.description).slice(0, 4_000), url: job.url,
+          postedAt: isoDate(job.epoch ?? job.date), employmentType,
+          salaryMin: job.salary_min > 0 ? job.salary_min : null, salaryMax: job.salary_max > 0 ? job.salary_max : null,
+          salaryCurrency: job.salary_min > 0 || job.salary_max > 0 ? "USD" : null,
+          matchedSkills: [], matchScore: 0,
+        } satisfies JobSearchResult];
+      }).filter((job) => matchesQuery(job, query)).slice(0, 75);
+    },
+  };
+}
+
+function jobicyProvider(): JobSearchProvider {
+  return {
+    id: "jobicy", label: "Jobicy", enabled: true,
+    async search(query, signal) {
+      const url = new URL("https://jobicy.com/api/v2/remote-jobs");
+      url.search = new URLSearchParams({ count: "100" }).toString();
+      const payload = jobicySchema.parse(await fetchProviderJson(url, signal, undefined, 3_600));
+      return payload.jobs.map((job): JobSearchResult => ({
+        id: `jobicy:${job.id}`, source: "jobicy", sourceLabel: "Jobicy", title: plainText(job.jobTitle),
+        company: plainText(job.companyName), location: job.jobGeo, remote: true,
+        description: plainText(job.jobDescription).slice(0, 4_000), url: job.url, postedAt: isoDate(job.pubDate),
+        employmentType: Array.isArray(job.jobType) ? job.jobType[0] ?? null : job.jobType ?? null,
+        salaryMin: job.salaryMin ?? null, salaryMax: job.salaryMax ?? null,
+        salaryCurrency: job.salaryCurrency ?? null, matchedSkills: [], matchScore: 0,
+      })).filter((job) => matchesQuery(job, query)).slice(0, 50);
+    },
+  };
+}
+
 function arbeitnowProvider(id: string, label: string, endpoint: string): JobSearchProvider {
   return {
     id, label, enabled: true,
     async search(query, signal) {
-      const payload = arbeitnowSchema.parse(await fetchProviderJson(new URL(endpoint), signal));
-      return payload.data.map((job): JobSearchResult => ({
+      const payloads = await Promise.all([1, 2, 3].map(async (page) => {
+        const url = new URL(endpoint);
+        url.searchParams.set("page", String(page));
+        return arbeitnowSchema.parse(await fetchProviderJson(url, signal));
+      }));
+      return payloads.flatMap(({ data }) => data).map((job): JobSearchResult => ({
         id: `${id}:${job.slug}`, source: id, sourceLabel: label, title: job.title,
         company: job.company_name, location: job.location, remote: job.remote,
         description: plainText(job.description).slice(0, 4_000), url: job.url,
         postedAt: isoDate(job.created_at),
         employmentType: job.job_types[0] ?? null, salaryMin: null, salaryMax: null,
         salaryCurrency: null, matchedSkills: [], matchScore: 0,
-      })).filter((job) => matchesQuery(job, query)).slice(0, 25);
+      })).filter((job) => matchesQuery(job, query)).slice(0, 75);
     },
   };
 }
@@ -55,10 +118,12 @@ function adzunaProvider(config: SearchProviderConfig): JobSearchProvider {
     id: "adzuna", label: "Adzuna", enabled,
     unavailableMessage: "Add ADZUNA_APP_ID and ADZUNA_APP_KEY to enable Adzuna.",
     async search(query, signal) {
-      const url = new URL(`https://api.adzuna.com/v1/api/jobs/${config.adzunaCountry}/search/1`);
-      url.search = new URLSearchParams({ app_id: config.adzunaAppId!, app_key: config.adzunaAppKey!, results_per_page: "25", what: query.q, ...(query.location ? { where: query.location } : {}), "content-type": "application/json" }).toString();
-      const payload = adzunaSchema.parse(await fetchProviderJson(url, signal));
-      return payload.results.map((job): JobSearchResult => ({
+      const payloads = await Promise.all([1, 2, 3].map(async (page) => {
+        const url = new URL(`https://api.adzuna.com/v1/api/jobs/${config.adzunaCountry}/search/${page}`);
+        url.search = new URLSearchParams({ app_id: config.adzunaAppId!, app_key: config.adzunaAppKey!, results_per_page: "50", what: query.q, ...(query.location ? { where: query.location } : {}), "content-type": "application/json" }).toString();
+        return adzunaSchema.parse(await fetchProviderJson(url, signal));
+      }));
+      return payloads.flatMap(({ results }) => results).map((job): JobSearchResult => ({
         id: `adzuna:${job.id}`, source: "adzuna", sourceLabel: "Adzuna", title: plainText(job.title),
         company: job.company?.display_name ?? "Company not listed", location: job.location?.display_name ?? "Location not listed",
         remote: /remote/i.test(`${job.location?.display_name ?? ""} ${job.description}`), description: plainText(job.description).slice(0, 4_000),
@@ -66,7 +131,7 @@ function adzunaProvider(config: SearchProviderConfig): JobSearchProvider {
         employmentType: job.contract_time ?? job.contract_type ?? null, salaryMin: job.salary_min ?? null,
         salaryMax: job.salary_max ?? null, salaryCurrency: config.adzunaCountry === "us" ? "USD" : null,
         matchedSkills: [], matchScore: 0,
-      })).filter((job) => matchesQuery(job, query));
+      })).filter((job) => matchesQuery(job, query)).slice(0, 100);
     },
   };
 }
@@ -82,17 +147,19 @@ function museProvider(config: SearchProviderConfig): JobSearchProvider {
     id: "muse", label: "The Muse", enabled: Boolean(config.museApiKey),
     unavailableMessage: "Add THE_MUSE_API_KEY after registering the CareerOS application with The Muse.",
     async search(query, signal) {
-      const url = new URL("https://www.themuse.com/api/public/jobs");
-      url.search = new URLSearchParams({ page: "0", api_key: config.museApiKey! }).toString();
-      const payload = museSchema.parse(await fetchProviderJson(url, signal));
-      return payload.results.map((job): JobSearchResult => ({
+      const payloads = await Promise.all([0, 1, 2].map(async (page) => {
+        const url = new URL("https://www.themuse.com/api/public/jobs");
+        url.search = new URLSearchParams({ page: String(page), api_key: config.museApiKey! }).toString();
+        return museSchema.parse(await fetchProviderJson(url, signal));
+      }));
+      return payloads.flatMap(({ results }) => results).map((job): JobSearchResult => ({
         id: `muse:${job.id}`, source: "muse", sourceLabel: "The Muse", title: job.name,
         company: job.company.name, location: job.locations.map(({ name }) => name).join(", ") || "Location not listed",
         remote: job.locations.some(({ name }) => /remote|flexible/i.test(name)), description: plainText(job.contents).slice(0, 4_000),
         url: job.refs.landing_page, postedAt: isoDate(job.publication_date),
         employmentType: job.levels[0]?.name ?? null, salaryMin: null, salaryMax: null, salaryCurrency: null,
         matchedSkills: [], matchScore: 0,
-      })).filter((job) => matchesQuery(job, query)).slice(0, 25);
+      })).filter((job) => matchesQuery(job, query)).slice(0, 75);
     },
   };
 }
@@ -114,7 +181,7 @@ function usaJobsProvider(config: SearchProviderConfig): JobSearchProvider {
     unavailableMessage: "Add USAJOBS_API_KEY and USAJOBS_USER_AGENT after registering with USAJOBS.",
     async search(query, signal) {
       const url = new URL("https://data.usajobs.gov/api/search");
-      url.search = new URLSearchParams({ Keyword: query.q, ResultsPerPage: "25", WhoMayApply: "Public", Fields: "Full", ...(query.location ? { LocationName: query.location } : {}), ...(query.remote === "remote" ? { RemoteIndicator: "True" } : query.remote === "onsite" ? { RemoteIndicator: "False" } : {}) }).toString();
+      url.search = new URLSearchParams({ Keyword: query.q, ResultsPerPage: "100", WhoMayApply: "Public", Fields: "Full", ...(query.location ? { LocationName: query.location } : {}), ...(query.remote === "remote" ? { RemoteIndicator: "True" } : query.remote === "onsite" ? { RemoteIndicator: "False" } : {}) }).toString();
       const payload = usaJobsSchema.parse(await fetchProviderJson(url, signal, { "authorization-key": config.usaJobsApiKey!, "user-agent": config.usaJobsUserAgent! }));
       return payload.SearchResult.SearchResultItems.map(({ MatchedObjectId, MatchedObjectDescriptor: job }): JobSearchResult => {
         const pay = job.PositionRemuneration[0];
@@ -140,6 +207,8 @@ export interface SearchProviderConfig {
 
 export function createJobSearchProviders(config: SearchProviderConfig): JobSearchProvider[] {
   return [
+    remoteOkProvider(),
+    jobicyProvider(),
     arbeitnowProvider("arbeitnow-de", "Arbeitnow Germany", "https://www.arbeitnow.com/api/job-board-api"),
     arbeitnowProvider("arbeitnow-uk", "Arbeitnow UK", "https://www.arbeitnow.co.uk/api/job-board-api"),
     adzunaProvider(config), usaJobsProvider(config), museProvider(config),
