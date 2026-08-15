@@ -33,5 +33,13 @@ export function buildExternalJobSearches({
     { id: "google", label: "Google Jobs", url: withParams("https://www.google.com/search", { q: googleQuery }) },
     { id: "ziprecruiter", label: "ZipRecruiter", url: withParams("https://www.ziprecruiter.com/jobs-search", { search: keywords, location: normalizedLocation }) },
     { id: "dice", label: "Dice", url: withParams("https://www.dice.com/jobs", { q: keywords, location: normalizedLocation }) },
+    { id: "monster", label: "Monster", url: withParams("https://www.monster.com/jobs/search", { q: keywords, where: normalizedLocation }) },
+    { id: "careerbuilder", label: "CareerBuilder", url: withParams("https://www.careerbuilder.com/jobs", { keywords, location: normalizedLocation }) },
+    { id: "simplyhired", label: "SimplyHired", url: withParams("https://www.simplyhired.com/search", { q: keywords, l: normalizedLocation }) },
+    { id: "builtin", label: "Built In", url: withParams("https://builtin.com/jobs", { search: keywords, location: normalizedLocation }) },
+    { id: "flexjobs", label: "FlexJobs", url: withParams("https://www.flexjobs.com/search", { search: keywords, location: normalizedLocation }) },
+    { id: "snagajob", label: "Snagajob", url: withParams("https://www.snagajob.com/search", { q: keywords, w: normalizedLocation }) },
+    { id: "idealist", label: "Idealist", url: withParams("https://www.idealist.org/en/jobs", { q: keywords, location: normalizedLocation }) },
+    { id: "wellfound", label: "Wellfound", url: withParams("https://wellfound.com/jobs", { query: keywords, location: normalizedLocation }) },
   ];
 }

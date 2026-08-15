@@ -19,7 +19,7 @@ export function CommonJobBoards({
         <div>
           <h3 id="common-job-boards-heading" className="font-bold">Search common job platforms</h3>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--muted)]">
-            These platforms do not provide CareerOS with an open listing-search API. Open the same search directly on each platform; results stay on that platform.
+            Open the same search on additional major boards that are not available as native CareerOS feeds in the current environment. Results stay on each platform.
           </p>
         </div>
         <p className="text-xs font-semibold text-[var(--muted)]">Opens in a new tab</p>
