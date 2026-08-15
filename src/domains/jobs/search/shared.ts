@@ -8,9 +8,21 @@ export async function fetchProviderJson(
   headers?: HeadersInit,
   revalidateSeconds?: number,
 ) {
+  return fetchProviderJsonRequest(url, signal, headers ? { headers } : {}, revalidateSeconds);
+}
+
+export async function fetchProviderJsonRequest(
+  url: URL,
+  signal: AbortSignal,
+  init: RequestInit = {},
+  revalidateSeconds?: number,
+) {
+  const headers = new Headers({ accept: "application/json", "user-agent": "CareerOS Job Search/1.0" });
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
   const response = await fetch(url, {
+    ...init,
     cache: revalidateSeconds ? "force-cache" : "no-store",
-    headers: { accept: "application/json", "user-agent": "CareerOS Job Search/1.0", ...headers },
+    headers,
     ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds } } : {}),
     signal,
   });

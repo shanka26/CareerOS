@@ -9,11 +9,16 @@ describe("buildExternalJobSearches", () => {
     const indeed = new URL(searches.find(({ id }) => id === "indeed")!.url);
     const google = new URL(searches.find(({ id }) => id === "google")!.url);
 
-    expect(searches.map(({ label }) => label)).toEqual(["LinkedIn", "Indeed", "Glassdoor", "Google Jobs", "ZipRecruiter", "Dice"]);
+    expect(searches.map(({ label }) => label)).toEqual([
+      "LinkedIn", "Indeed", "Glassdoor", "Google Jobs", "ZipRecruiter", "Dice", "Monster", "CareerBuilder",
+      "SimplyHired", "Built In", "FlexJobs", "Snagajob", "Idealist", "Wellfound",
+    ]);
     expect(linkedin.searchParams.get("keywords")).toBe("Platform Engineer remote");
     expect(linkedin.searchParams.get("location")).toBe("Chicago");
     expect(indeed.searchParams.get("q")).toBe("Platform Engineer remote");
     expect(indeed.searchParams.get("l")).toBe("Chicago");
     expect(google.searchParams.get("q")).toBe("Platform Engineer remote Chicago jobs");
+    expect(new URL(searches.find(({ id }) => id === "monster")!.url).searchParams.get("where")).toBe("Chicago");
+    expect(new URL(searches.find(({ id }) => id === "wellfound")!.url).searchParams.get("query")).toBe("Platform Engineer remote");
   });
 });

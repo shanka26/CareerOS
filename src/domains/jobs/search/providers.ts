@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { fetchProviderJson, matchesQuery, plainText } from "./shared";
+import { createPartnerJobSearchProviders, type PartnerProviderConfig } from "./partner-providers";
 import type { JobSearchProvider, JobSearchResult } from "./types";
 
 function isoDate(value: string | number | undefined) {
@@ -196,7 +197,7 @@ function usaJobsProvider(config: SearchProviderConfig): JobSearchProvider {
   };
 }
 
-export interface SearchProviderConfig {
+export interface SearchProviderConfig extends PartnerProviderConfig {
   adzunaAppId?: string | undefined;
   adzunaAppKey?: string | undefined;
   adzunaCountry: string;
@@ -212,5 +213,6 @@ export function createJobSearchProviders(config: SearchProviderConfig): JobSearc
     arbeitnowProvider("arbeitnow-de", "Arbeitnow Germany", "https://www.arbeitnow.com/api/job-board-api"),
     arbeitnowProvider("arbeitnow-uk", "Arbeitnow UK", "https://www.arbeitnow.co.uk/api/job-board-api"),
     adzunaProvider(config), usaJobsProvider(config), museProvider(config),
+    ...createPartnerJobSearchProviders(config),
   ];
 }

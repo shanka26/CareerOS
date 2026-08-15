@@ -15,6 +15,8 @@ export async function GET(request: Request) {
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
   const url = new URL(request.url);
+  const userIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const userAgent = request.headers.get("user-agent")?.slice(0, 512);
   const parsed = jobSearchQuerySchema.safeParse({
     q: url.searchParams.get("q"),
     location: url.searchParams.get("location") ?? "",
@@ -43,6 +45,12 @@ export async function GET(request: Request) {
     usaJobsApiKey: serverEnv.USAJOBS_API_KEY,
     usaJobsUserAgent: serverEnv.USAJOBS_USER_AGENT,
     museApiKey: serverEnv.THE_MUSE_API_KEY,
+    joobleApiKey: serverEnv.JOOBLE_API_KEY,
+    reedApiKey: serverEnv.REED_API_KEY,
+    careerjetApiKey: serverEnv.CAREERJET_API_KEY,
+    careerjetLocaleCode: serverEnv.CAREERJET_LOCALE_CODE,
+    userIp,
+    userAgent,
   });
   const search = await aggregateJobSearch({ query: parsed.data, providers, verifiedSkills: skills });
 
